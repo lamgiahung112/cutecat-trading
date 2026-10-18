@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Twin Reaper FX — Manual | CuteCat Trading</title>
+  <meta name="description" content="Twin Reaper FX manual: a MetaTrader 5 EA with two grid engines — Phantom (USD-strength grid) and Wraith (Bollinger grid) — for GBPUSD.">
+  <link rel="icon" href="assets/img/twin-reaper.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body data-ea="twin-reaper">
+
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="index.html">
+        <img src="assets/img/logo.png" alt="CuteCat Trading logo">
+        <span>Cute<b>Cat</b> Trading</span>
+      </a>
+      <nav class="nav-links">
+        <a href="index.html#eas">Expert Advisors</a>
+        <a href="newsman.html">Newsman</a>
+        <a href="twin-reaper.html">Twin Reaper</a>
+        <a class="cta" href="https://t.me/trikohung" target="_blank" rel="noopener">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container crumb">
+    <a href="index.html">Home</a> / <a href="index.html#eas">Expert Advisors</a> / Twin Reaper FX
+  </div>
+
+  <!-- Hero -->
+  <section class="container ea-hero">
+    <div class="emblem"><img src="assets/img/twin-reaper.png" alt="Twin Reaper FX emblem"></div>
+    <div>
+      <div class="eyebrow">MT5 Expert Advisor · Dual Grid</div>
+      <h1>Twin Reaper FX</h1>
+      <p class="lead">
+        Two independent grid engines in one EA, each on its own magic number so they never
+        interfere. <b>Phantom</b> trades a 5-pair USD-strength vote; <b>Wraith</b> trades
+        Bollinger-band breaks. Built for <b>GBPUSD</b>.
+      </p>
+      <div class="hero-actions" style="justify-content:flex-start;">
+        <a class="btn btn-primary" href="#install">Install guide</a>
+        <a class="btn btn-ghost" href="https://www.mql5.com/en/market/product/201925" target="_blank" rel="noopener">Get the EA</a>
+      </div>
+    </div>
+  </section>
+
+  <main class="container doc">
+    <div class="doc-grid">
+
+      <!-- TOC -->
+      <aside class="toc">
+        <div class="toc-title">On this page</div>
+        <a href="#overview">Overview</a>
+        <a href="#phantom">Phantom engine</a>
+        <a href="#wraith">Wraith engine</a>
+        <a href="#guard">Account guard</a>
+        <a href="#backtest">Backtest</a>
+        <a href="#profile">Default profile</a>
+        <a href="#requirements">Requirements</a>
+        <a href="#install">Installation</a>
+        <a href="#inputs">Inputs reference</a>
+        <a href="#risk">Risk warning</a>
+      </aside>
+
+      <!-- Content -->
+      <div class="doc-content">
+
+        <section class="doc-section" id="overview">
+          <h2>Overview</h2>
+          <p>
+            <b>Twin Reaper FX</b> runs <b>two grid engines in one EA</b>, each on its own magic number so
+            they operate completely independently. Only the order comment, the two engine on/off switches
+            and the two magic numbers are user inputs — every other parameter is hardcoded to the tuned
+            profile described below.
+          </p>
+          <div class="grid-2">
+            <div class="card engine-card">
+              <div class="engine-name">👻 Phantom</div>
+              <div class="engine-tag">USD-strength grid</div>
+              <p class="muted">On each H1 close, a 5-pair US-dollar-strength vote seeds a basket, then adds <b>against</b> the move. The whole basket exits together on take-profit or a give-back trail.</p>
+            </div>
+            <div class="card engine-card">
+              <div class="engine-name">💀 Wraith</div>
+              <div class="engine-tag">Bollinger band grid</div>
+              <p class="muted">A candle that closes above the upper band stacks a SELL; a close below the lower band stacks a BUY. Each side is its own basket, closed by a give-back trail.</p>
+            </div>
+          </div>
+          <div class="callout info">
+            <div class="ico">🎯</div>
+            <div>
+              <h4>The grid is a safety net, not the plan</h4>
+              <p>
+                Both engines lead with a <b>precision entry</b>. The grid only exists to rescue a bad
+                entry — and a good entry rarely needs it. See the <a href="#backtest">backtest</a>: most
+                baskets closed on the very first order.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="doc-section" id="phantom">
+          <h2>👻 Phantom engine — USD-strength grid</h2>
+          <p>
+            Phantom reads a <b>5-pair US-dollar-strength vote</b> on every <b>H1 candle close</b>, across
+            EURUSD, GBPUSD, AUDUSD, USDCHF and USDCAD. It only acts when all five pairs agree on the
+            dollar's direction:
+          </p>
+          <ul class="feature-list">
+            <li><b>USD weakened</b> → EUR/GBP/AUD up <i>and</i> USDCHF/USDCAD down → seed a <b>BUY</b> basket.</li>
+            <li><b>USD strengthened</b> → EUR/GBP/AUD down <i>and</i> USDCHF/USDCAD up → seed a <b>SELL</b> basket.</li>
+            <li>Anything less than a unanimous vote → no trade that bar.</li>
+          </ul>
+          <p>
+            Once seeded, Phantom <b>adds against the move</b> every <code>500</code> points (martingale ×2),
+            up to <code>15</code> positions in the basket. The basket closes together on a <code>500</code>-point
+            take-profit or a give-back trail (arms at <code>300</code> points of profit, closes on a
+            <code>100</code>-point pullback). There is <b>no stop-loss</b>. Phantom holds one basket at a time.
+          </p>
+          <div class="callout info">
+            <div class="ico">🔎</div>
+            <div>
+              <p>Phantom auto-detects your broker's symbol <b>suffix</b> (e.g. <span class="mono">.m</span>, <span class="mono">+</span>, <span class="mono">pro</span>) for its five signal pairs — just make sure those pairs exist at your broker.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="doc-section" id="wraith">
+          <h2>💀 Wraith engine — Bollinger band grid</h2>
+          <p>
+            Wraith watches a <b>Bollinger Band</b> (period 20, deviation 2.0) on the chart timeframe. On each
+            candle close:
+          </p>
+          <ul class="feature-list">
+            <li>Close <b>above the upper band</b> → open or stack a <b>SELL</b>.</li>
+            <li>Close <b>below the lower band</b> → open or stack a <b>BUY</b>.</li>
+          </ul>
+          <p>
+            Each new rung must be at least <code>200</code> points from the last same-side order, and lots
+            grow by a martingale factor of <code>×1.25</code> per position, up to <code>20</code> positions
+            per side. The <b>buy and sell sides are separate baskets</b> — each closes on its own give-back
+            trail (arms at <code>200</code> points of basket profit, closes on a <code>50</code>-point
+            pullback). There is <b>no stop-loss</b>.
+          </p>
+        </section>
+
+        <section class="doc-section" id="guard">
+          <h2>🛡️ Account guard — the circuit breaker</h2>
+          <p>
+            Because both engines run no-stop-loss grids, Twin Reaper has a shared <b>account guard</b>. If
+            either limit is breached, <b>every position from both engines is closed at once</b> and trading
+            halts until the EA is reloaded:
+          </p>
+          <div class="grid-2">
+            <div class="card">
+              <h4>Equity drawdown</h4>
+              <p class="muted">Flatten &amp; halt if equity falls <b>30%</b> from its peak.</p>
+            </div>
+            <div class="card">
+              <h4>Margin level</h4>
+              <p class="muted">Flatten &amp; halt if the account margin level drops below <b>150%</b>.</p>
+            </div>
+          </div>
+          <p class="muted" style="margin-top:14px;">The guard is your last line of defence against a grid blow-up — but it closes at market, so in a fast move the realised loss can exceed the trigger level.</p>
+        </section>
+
+        <section class="doc-section" id="backtest">
+          <h2>Backtest — precision in the numbers</h2>
+          <p>
+            Over a sample backtest of <b>179 baskets</b>, the signal was accurate enough that the vast
+            majority closed on the first or second order — before the grid ever had to stack deeper:
+          </p>
+          <div class="stats">
+            <div class="stat"><div class="num">63%</div><div class="lbl">113 / 179 closed on a single order</div></div>
+            <div class="stat"><div class="num">88%</div><div class="lbl">157 / 179 closed within 1–2 orders</div></div>
+            <div class="stat"><div class="num">1.76</div><div class="lbl">Average basket size (orders)</div></div>
+          </div>
+          <figure>
+            <img src="assets/img/twin-reaper-backtest.png" alt="Twin Reaper FX 2026 GBPUSD backtest — equity curve from 5000 USD">
+            <figcaption>2026 GBPUSD backtest, starting balance 5,000 USD. Illustrative only — not a promise of future results.</figcaption>
+          </figure>
+          <div class="callout warn">
+            <div class="ico">📉</div>
+            <div>
+              <p>Backtests run on historical data under ideal fill assumptions. They are <b>illustrative only</b> and do not guarantee future performance. A martingale grid can still experience deep drawdown on an unexpected trend.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="doc-section" id="profile">
+          <h2>Default profile</h2>
+          <p class="muted">All non-input parameters are hardcoded to this profile. Distances are in points.</p>
+          <div class="grid-2">
+            <div class="card">
+              <h3>👻 Phantom</h3>
+              <ul class="feature-list">
+                <li>Seed lot <b>0.01</b></li>
+                <li>Add every <b>500 pts</b> of adverse move</li>
+                <li>Max <b>15</b> positions / basket</li>
+                <li>Martingale <b>×2.0</b></li>
+                <li>Basket TP <b>500 pts</b> · no SL</li>
+                <li>Trail: start <b>300</b> / give back <b>100</b></li>
+                <li>Signal: H1 close, 5-pair vote</li>
+              </ul>
+            </div>
+            <div class="card">
+              <h3>💀 Wraith</h3>
+              <ul class="feature-list">
+                <li>Seed lot <b>0.01</b></li>
+                <li>Martingale <b>×1.25</b> / position</li>
+                <li>Max <b>20</b> positions / side</li>
+                <li>Min <b>200 pts</b> between rungs</li>
+                <li>Bollinger <b>20</b>, deviation <b>2.0</b></li>
+                <li>Trail: start <b>200</b> / give back <b>50</b> · no SL</li>
+                <li>Signal: chart-timeframe close</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="doc-section" id="requirements">
+          <h2>Requirements</h2>
+          <ul class="feature-list">
+            <li><b>MetaTrader 5</b> — this is an MT5 Expert Advisor (<code>Twin_Reaper.ex5</code>).</li>
+            <li><b>Hedging account.</b> Both engines run grids on the same symbol, which a netting account can't do.</li>
+            <li><b>Designed for GBPUSD.</b> Attach the EA to a <b>GBPUSD</b> chart — H1 is recommended (it's Phantom's signal timeframe and Wraith's band timeframe follows the chart).</li>
+            <li><b>Phantom's 5 signal pairs must exist</b> at your broker (EURUSD, GBPUSD, AUDUSD, USDCHF, USDCAD). The suffix is auto-detected.</li>
+            <li><b>A VPS / 24-5 uptime</b> is strongly recommended — grids must be managed continuously.</li>
+            <li><b>Adequate balance for the martingale.</b> Keep the start lot tiny and size exposure to your balance.</li>
+          </ul>
+        </section>
+
+        <section class="doc-section" id="install">
+          <h2>Installation</h2>
+          <ol class="steps">
+            <li>
+              <h4>Copy the EA into MT5</h4>
+              <p>In MetaTrader 5 open <b>File → Open Data Folder</b>, then drop <code>Twin_Reaper.ex5</code> into <code>MQL5/Experts/</code>. Restart MT5 or right-click <b>Navigator → Refresh</b>.</p>
+            </li>
+            <li>
+              <h4>Add the signal pairs to Market Watch</h4>
+              <p>Make sure EURUSD, GBPUSD, AUDUSD, USDCHF and USDCAD are available. Phantom adds them automatically, but they must exist at your broker.</p>
+            </li>
+            <li>
+              <h4>Attach to a GBPUSD chart</h4>
+              <p>Open a <b>GBPUSD, H1</b> chart and drag <b>Twin Reaper</b> onto it. Tick <b>Allow Algo Trading</b> in the dialog, and enable the <b>Algo Trading</b> toolbar button.</p>
+            </li>
+            <li>
+              <h4>Choose which engines to run</h4>
+              <p>Use <code>InpEnablePhantom</code> and <code>InpEnableWraith</code> to run one or both engines. Give each a distinct magic number if you change the defaults.</p>
+            </li>
+            <li>
+              <h4>Start on demo</h4>
+              <p>Run it on a <b>demo account</b> first to confirm behaviour at your broker, then move to a small live account with tiny lots.</p>
+            </li>
+          </ol>
+        </section>
+
+        <section class="doc-section" id="inputs">
+          <h2>Inputs reference</h2>
+          <p class="muted">Only these five are user inputs — everything else is hardcoded to the <a href="#profile">default profile</a>.</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Input</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><span class="param">InpComment</span></td><td><span class="def">"Twin Reaper"</span></td><td>Order comment used by both engines.</td></tr>
+                <tr><td><span class="param">InpEnablePhantom</span></td><td><span class="def">true</span></td><td>Enable the Phantom engine (USD-strength grid).</td></tr>
+                <tr><td><span class="param">InpEnableWraith</span></td><td><span class="def">true</span></td><td>Enable the Wraith engine (Bollinger grid).</td></tr>
+                <tr><td><span class="param">InpMagicPhantom</span></td><td><span class="def">11022004</span></td><td>Magic number for Phantom's positions.</td></tr>
+                <tr><td><span class="param">InpMagicWraith</span></td><td><span class="def">20261017</span></td><td>Magic number for Wraith's positions.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="callout info" style="margin-top:20px;">
+            <div class="ico">🔧</div>
+            <div>
+              <p>Want a different risk profile (lots, grid step, martingale factor, trail)? Those live in the hardcoded <span class="mono">#define</span> block in the source and are tuned as a set — message the author to discuss a custom build.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="doc-section" id="risk">
+          <h2>Risk warning</h2>
+          <div class="callout danger">
+            <div class="ico">⚠️</div>
+            <div>
+              <h4>This is a no-stop-loss, martingale grid EA</h4>
+              <p>It carries a <b>real risk of losing the entire account</b>. Read this section before using it with real money.</p>
+            </div>
+          </div>
+          <ul class="feature-list">
+            <li><b>No per-trade stop loss.</b> A strong, sustained trend can keep stacking losing positions.</li>
+            <li><b>Martingale</b> lot progression grows exposure fast and compounds drawdown.</li>
+            <li>Baskets close only on take-profit or the give-back trail — floating drawdown can be large before that happens.</li>
+            <li>The <b>account guard</b> (30% DD / 150% margin level) is a backstop, not a guarantee — it closes at market, so the realised loss can exceed the trigger.</li>
+            <li><b>Past performance and backtests do not guarantee future results.</b> Backtest thoroughly and run on a <b>demo</b> account first.</li>
+            <li>Use money you can afford to lose, keep the start lot tiny, and size exposure to your balance.</li>
+          </ul>
+          <p class="muted">
+            Trading leveraged products is high-risk and may not be suitable for everyone. You use this
+            EA entirely at your own risk; the author accepts no liability for any losses.
+          </p>
+        </section>
+
+        <div class="callout info" style="margin-top:36px;">
+          <div class="ico">💬</div>
+          <div>
+            <h4>Questions?</h4>
+            <p>Reach the author directly on Telegram: <a href="https://t.me/trikohung" target="_blank" rel="noopener">t.me/trikohung</a></p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-inner">
+        <a class="brand" href="index.html">
+          <img src="assets/img/logo.png" alt="CuteCat Trading logo">
+          <span>Cute<b>Cat</b> Trading</span>
+        </a>
+        <div class="muted"><a href="https://t.me/trikohung" target="_blank" rel="noopener">t.me/trikohung</a></div>
+      </div>
+      <p class="footer-disclaimer">
+        Risk warning: Twin Reaper FX is a no-stop-loss, martingale grid EA and can lose money, including
+        the entire account balance. Backtests are illustrative only and do not guarantee future results.
+        You use this tool entirely at your own risk.
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>

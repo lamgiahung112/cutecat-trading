@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CuteCat Trading — MT5 Expert Advisors</title>
+  <meta name="description" content="CuteCat Trading builds MetaTrader 5 Expert Advisors. Meet Newsman EA (news straddle) and Twin Reaper FX (dual grid engine).">
+  <link rel="icon" href="assets/img/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="index.html">
+        <img src="assets/img/logo.png" alt="CuteCat Trading logo">
+        <span>Cute<b>Cat</b> Trading</span>
+      </a>
+      <nav class="nav-links">
+        <a href="#eas">Expert Advisors</a>
+        <a href="newsman.html">Newsman</a>
+        <a href="twin-reaper.html">Twin Reaper</a>
+        <a class="cta" href="https://t.me/trikohung" target="_blank" rel="noopener">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="container">
+        <span class="eyebrow">MetaTrader 5 Expert Advisors</span>
+        <h1>Automated trading,<br><span class="grad">built with precision.</span></h1>
+        <p class="lead">
+          CuteCat Trading builds focused, no-nonsense MT5 Expert Advisors — each with a
+          clear strategy, honest risk disclosure, and a full manual. Pick an EA below to
+          read how it works.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#eas">Browse the EAs</a>
+          <a class="btn btn-ghost" href="https://t.me/trikohung" target="_blank" rel="noopener">Talk on Telegram</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- EA grid -->
+    <section class="section" id="eas">
+      <div class="container">
+        <div class="section-head">
+          <h2>The Expert Advisors</h2>
+          <p>Two very different strategies. Both run on MT5, both require a hedging account, and both ship with a complete manual.</p>
+        </div>
+
+        <div class="ea-grid">
+
+          <!-- Newsman -->
+          <a class="ea-card" href="newsman.html" style="--card-accent:#f5b301; --card-glow:rgba(245,179,1,0.14);">
+            <div class="card-banner">
+              <img src="assets/img/newsman.png" alt="Newsman EA emblem">
+            </div>
+            <div class="card-body">
+              <h3>Newsman EA</h3>
+              <div class="tagline" style="color:#f5b301;">Trade big news, aggressively</div>
+              <div class="pill-row">
+                <span class="pill">News straddle</span>
+                <span class="pill">NFP · CPI · FOMC</span>
+                <span class="pill">Pyramiding</span>
+              </div>
+              <p class="desc">
+                Seconds before a high-impact USD release, Newsman drops a buy-stop and a
+                sell-stop around price — no visible stop-loss. The instant a leg fills it
+                attaches a trailed protective stop and can pyramid as price runs.
+              </p>
+              <div class="card-foot">
+                <span class="read-more" style="color:#f5b301;">Read the manual →</span>
+              </div>
+            </div>
+          </a>
+
+          <!-- Twin Reaper -->
+          <a class="ea-card" href="twin-reaper.html" style="--card-accent:#ff5168; --card-glow:rgba(255,81,104,0.14);">
+            <div class="card-banner">
+              <img src="assets/img/twin-reaper.png" alt="Twin Reaper FX emblem">
+            </div>
+            <div class="card-body">
+              <h3>Twin Reaper FX</h3>
+              <div class="tagline" style="color:#ff5168;">Two grim reapers, one chart</div>
+              <div class="pill-row">
+                <span class="pill">Dual grid</span>
+                <span class="pill">GBPUSD</span>
+                <span class="pill">Martingale</span>
+              </div>
+              <p class="desc">
+                Two independent grid engines in one EA. <b>Phantom</b> reads a 5-pair
+                USD-strength vote on each H1 close; <b>Wraith</b> trades Bollinger-band
+                breaks. A shared account guard flattens everything if drawdown spikes.
+              </p>
+              <div class="card-foot">
+                <span class="read-more" style="color:#ff5168;">Read the manual →</span>
+              </div>
+            </div>
+          </a>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Why -->
+    <section class="section" style="padding-top:12px;">
+      <div class="container">
+        <div class="grid-3">
+          <div class="card">
+            <h3>📖 Fully documented</h3>
+            <p class="muted">Every EA has a manual covering the strategy, every input, the account requirements, and an honest risk section — no black boxes.</p>
+          </div>
+          <div class="card">
+            <h3>🛡️ Risk-first</h3>
+            <p class="muted">Account guards, hidden stops, demo-first guidance. The EAs trade aggressively, and the docs say exactly where the risk lives.</p>
+          </div>
+          <div class="card">
+            <h3>💬 Direct support</h3>
+            <p class="muted">Questions go straight to the author on Telegram — no ticket queue, no reseller in the middle.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-inner">
+        <a class="brand" href="index.html">
+          <img src="assets/img/logo.png" alt="CuteCat Trading logo">
+          <span>Cute<b>Cat</b> Trading</span>
+        </a>
+        <div class="muted">
+          <a href="https://t.me/trikohung" target="_blank" rel="noopener">t.me/trikohung</a>
+        </div>
+      </div>
+      <p class="footer-disclaimer">
+        Risk warning: Trading leveraged FX products carries a high risk of loss and may not be
+        suitable for every investor. These Expert Advisors can lose money, including the entire
+        account balance. Past performance and backtests are illustrative only and do not
+        guarantee future results. You use these tools entirely at your own risk.
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>

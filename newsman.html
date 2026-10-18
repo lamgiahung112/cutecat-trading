@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Newsman EA — Manual | CuteCat Trading</title>
+  <meta name="description" content="Newsman EA manual: a MetaTrader 5 news-straddle Expert Advisor for NFP, CPI and FOMC. Strategy, inputs, requirements and risk.">
+  <link rel="icon" href="assets/img/newsman.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body data-ea="newsman">
+
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="index.html">
+        <img src="assets/img/logo.png" alt="CuteCat Trading logo">
+        <span>Cute<b>Cat</b> Trading</span>
+      </a>
+      <nav class="nav-links">
+        <a href="index.html#eas">Expert Advisors</a>
+        <a href="newsman.html">Newsman</a>
+        <a href="twin-reaper.html">Twin Reaper</a>
+        <a class="cta" href="https://t.me/trikohung" target="_blank" rel="noopener">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container crumb">
+    <a href="index.html">Home</a> / <a href="index.html#eas">Expert Advisors</a> / Newsman EA
+  </div>
+
+  <!-- Hero -->
+  <section class="container ea-hero">
+    <div class="emblem"><img src="assets/img/newsman.png" alt="Newsman EA emblem"></div>
+    <div>
+      <div class="eyebrow">MT5 Expert Advisor · News Straddle</div>
+      <h1>Newsman EA</h1>
+      <p class="lead">
+        A news-straddle EA that brackets high-impact USD releases — NFP, CPI and FOMC —
+        with stop orders that carry <b>no visible stop-loss</b>, then trails and pyramids
+        the winning side.
+      </p>
+      <div class="hero-actions" style="justify-content:flex-start;">
+        <a class="btn btn-primary" href="#install">Install guide</a>
+        <a class="btn btn-ghost" href="https://www.mql5.com/en/market/product/201498" target="_blank" rel="noopener">Get the EA</a>
+      </div>
+    </div>
+  </section>
+
+  <main class="container doc">
+    <div class="doc-grid">
+
+      <!-- TOC -->
+      <aside class="toc">
+        <div class="toc-title">On this page</div>
+        <a href="#overview">Overview</a>
+        <a href="#how">How it works</a>
+        <a href="#events">Event source</a>
+        <a href="#requirements">Requirements</a>
+        <a href="#install">Installation</a>
+        <a href="#inputs">Inputs reference</a>
+        <a href="#risk">Risk warning</a>
+      </aside>
+
+      <!-- Content -->
+      <div class="doc-content">
+
+        <section class="doc-section" id="overview">
+          <h2>Overview</h2>
+          <p>
+            <b>Newsman EA</b> trades a <b>news straddle</b> around scheduled, high-impact US-dollar
+            economic releases. A few seconds before a release it places a <b>buy-stop</b> and a
+            <b>sell-stop</b> an equal distance from the current price. Whichever direction the news
+            spikes, that leg fills first and rides the move.
+          </p>
+          <p>
+            The pending orders deliberately carry <b>no stop-loss</b> while they rest — so a broker
+            can't see the SL and harvest it as liquidity. The instant a leg fills, a protective stop
+            is attached and trailed ghost-scalper style, and the position can <b>pyramid</b> as price
+            keeps running in your favour.
+          </p>
+          <div class="stats">
+            <div class="stat"><div class="num">3</div><div class="lbl">Event types (NFP · CPI · FOMC)</div></div>
+            <div class="stat"><div class="num">0</div><div class="lbl">Visible SL on pending orders</div></div>
+            <div class="stat"><div class="num">150</div><div class="lbl">Default straddle distance (points)</div></div>
+            <div class="stat"><div class="num">Hedging</div><div class="lbl">Account type required</div></div>
+          </div>
+        </section>
+
+        <section class="doc-section" id="how">
+          <h2>How it works</h2>
+
+          <h3>1 · Arm before the release</h3>
+          <p>
+            Newsman keeps a schedule of upcoming NFP, CPI and FOMC releases. <code>InpSecondsBefore</code>
+            seconds before a release it drops two pending orders around price:
+          </p>
+          <ul class="feature-list">
+            <li><b>Buy-stop</b> placed <code>InpDistancePoints</code> above the current price.</li>
+            <li><b>Sell-stop</b> placed <code>InpDistancePoints</code> below the current price.</li>
+            <li>Both rest with <b>no stop-loss attached</b> — the stop is deliberately kept off the order.</li>
+          </ul>
+
+          <h3>2 · A leg fills on the spike</h3>
+          <p>
+            When the number drops and price jumps, one leg triggers. At that moment Newsman attaches a
+            protective stop <code>InpInitialSLPoints</code> away and begins trailing it: once the trade
+            is <code>InpTrailActivationPoints</code> in profit, the stop follows price at a distance of
+            <code>InpTrailDistancePoints</code>, re-modifying only when it can improve by at least
+            <code>InpTrailStepPoints</code>.
+          </p>
+
+          <h3>3 · Pyramiding (optional)</h3>
+          <p>
+            With <code>InpEnablePyramid</code> on, Newsman adds further positions every
+            <code>InpPyramidStepPoints</code> of favourable move, up to <code>InpPyramidMaxPositions</code>
+            per direction. All same-direction positions <b>share one trailed stop</b>, so the whole
+            group is protected together.
+          </p>
+
+          <h3>4 · The opposite leg</h3>
+          <p>
+            The unfilled leg is handled one of two ways:
+          </p>
+          <div class="grid-2">
+            <div class="card">
+              <h4>OCO mode</h4>
+              <p class="muted">With <code>InpCancelOppositeOnFill</code> on, the opposite pending order is cancelled the moment one leg fills.</p>
+            </div>
+            <div class="card">
+              <h4>Keep-alive mode (default)</h4>
+              <p class="muted">Otherwise the unfilled leg stays live for <code>InpKeepOppositeMinutes</code> after the release (to catch a whipsaw reversal), then it's deleted.</p>
+            </div>
+          </div>
+
+          <div class="callout info">
+            <div class="ico">🥷</div>
+            <div>
+              <h4>Virtual SL — hide the stop entirely</h4>
+              <p>
+                With <code>InpVirtualSL</code> on, <b>no server-side stop is used at all</b>. The
+                protective/trailed level is held inside the EA's own logic, and when price trades
+                through it the EA closes the whole same-direction group itself. This hides the stop
+                from the broker completely — at the cost of requiring the EA (and your VPS) to stay
+                running to honour it.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="doc-section" id="events">
+          <h2>Event source</h2>
+          <div class="grid-2">
+            <div class="card">
+              <h4>🟢 Live trading</h4>
+              <p class="muted">
+                Reads the <b>MT5 economic calendar</b> (USD, high-impact only). Event times are already
+                in broker-server time. Upcoming releases are fetched ahead and cached to
+                <code>newsman_news_cache.csv</code>, refreshed on a daily cycle so the EA still arms
+                even in a thin pre-news market.
+              </p>
+            </div>
+            <div class="card">
+              <h4>🧪 Strategy Tester</h4>
+              <p class="muted">
+                The economic calendar isn't available in the tester, so Newsman builds its own
+                schedule: NFP from the first-Friday-of-the-month rule, plus a hardcoded CPI/FOMC
+                list. UTC times are converted to broker-server time using the offset settings.
+              </p>
+            </div>
+          </div>
+          <div class="callout warn">
+            <div class="ico">📅</div>
+            <div>
+              <p>
+                For live trading, make sure the <b>economic calendar is enabled</b> in your terminal
+                (Tools → Options → Community / Calendar). If the calendar returns no USD events,
+                Newsman has nothing to arm.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="doc-section" id="requirements">
+          <h2>Requirements</h2>
+          <ul class="feature-list">
+            <li><b>MetaTrader 5</b> — this is an MT5 Expert Advisor (<code>newsman.ex5</code>).</li>
+            <li><b>Hedging account.</b> Live trading needs a hedging account — the two-sided straddle and pyramiding both open multiple positions per symbol, which a netting account forbids. On a netting account the EA detects this and disables trading. <i>(The tester is exempt, so you can still backtest on netting.)</i></li>
+            <li><b>Economic calendar enabled</b> in the terminal for live mode.</li>
+            <li><b>A VPS / 24-5 uptime</b> is strongly recommended — especially with Virtual SL, where the EA must be running to honour the stop.</li>
+            <li>Attach it to the chart of the symbol you want to straddle (a major USD pair such as EURUSD or a USD-driven instrument).</li>
+          </ul>
+        </section>
+
+        <section class="doc-section" id="install">
+          <h2>Installation</h2>
+          <ol class="steps">
+            <li>
+              <h4>Copy the EA into MT5</h4>
+              <p>In MetaTrader 5 open <b>File → Open Data Folder</b>, then drop <code>newsman.ex5</code> into <code>MQL5/Experts/</code>. Restart MT5 or right-click <b>Navigator → Refresh</b>.</p>
+            </li>
+            <li>
+              <h4>Enable algo trading &amp; the calendar</h4>
+              <p>Turn on the <b>Algo Trading</b> toolbar button. Under <b>Tools → Options</b>, make sure the economic calendar is enabled so live events can be fetched.</p>
+            </li>
+            <li>
+              <h4>Attach to a chart</h4>
+              <p>Drag <b>Newsman EA</b> onto the chart of your chosen symbol. In the dialog, tick <b>Allow Algo Trading</b>.</p>
+            </li>
+            <li>
+              <h4>Set your inputs</h4>
+              <p>Choose which events to trade, your lot size, straddle distance and risk/trailing settings. Defaults are listed in the <a href="#inputs">inputs reference</a> below.</p>
+            </li>
+            <li>
+              <h4>Confirm it armed</h4>
+              <p>Check the <b>Experts</b> journal — Newsman logs each event it arms (e.g. <span class="mono">armed NFP @ … (server)</span>). A smiley face on the chart means it's running.</p>
+            </li>
+          </ol>
+        </section>
+
+        <section class="doc-section" id="inputs">
+          <h2>Inputs reference</h2>
+          <p class="muted">Defaults shown in <span class="def">green</span>. All distances are in <b>points</b> (10 points = 1 pip on a 5-digit broker).</p>
+
+          <h3>Order placement</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Input</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><span class="param">InpLots</span></td><td><span class="def">0.01</span></td><td>Lots per leg.</td></tr>
+                <tr><td><span class="param">InpDistancePoints</span></td><td><span class="def">150</span></td><td>Straddle distance from price (points) for each pending order.</td></tr>
+                <tr><td><span class="param">InpSecondsBefore</span></td><td><span class="def">3</span></td><td>Place the legs this many seconds before the release.</td></tr>
+                <tr><td><span class="param">InpCancelOppositeOnFill</span></td><td><span class="def">false</span></td><td>Cancel the opposite leg the moment one fills (OCO).</td></tr>
+                <tr><td><span class="param">InpKeepOppositeMinutes</span></td><td><span class="def">15</span></td><td>Otherwise, keep the unfilled leg alive this long after the release, then delete it.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Risk / trailing</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Input</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><span class="param">InpVirtualSL</span></td><td><span class="def">false</span></td><td>Keep <b>no</b> server-side stop; the EA holds the SL in logic and closes the group itself when price hits it.</td></tr>
+                <tr><td><span class="param">InpInitialSLPoints</span></td><td><span class="def">450</span></td><td>Protective SL attached the moment a leg fills (points, 0 = none). Kept off the pending order so it can't rest as liquidity.</td></tr>
+                <tr><td><span class="param">InpTrailActivationPoints</span></td><td><span class="def">200</span></td><td>Profit (points) before the trail engages.</td></tr>
+                <tr><td><span class="param">InpTrailDistancePoints</span></td><td><span class="def">100</span></td><td>SL trails this far behind price (points).</td></tr>
+                <tr><td><span class="param">InpTrailStepPoints</span></td><td><span class="def">50</span></td><td>Minimum SL improvement before it re-modifies (points).</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Incremental positions (pyramiding)</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Input</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><span class="param">InpEnablePyramid</span></td><td><span class="def">true</span></td><td>Add positions as price runs; all same-direction positions share one SL.</td></tr>
+                <tr><td><span class="param">InpPyramidStepPoints</span></td><td><span class="def">100</span></td><td>Add another position every this many points of favourable move.</td></tr>
+                <tr><td><span class="param">InpPyramidMaxPositions</span></td><td><span class="def">100</span></td><td>Max total positions per direction (including the first).</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Which events to trade</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Input</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><span class="param">InpTradeNFP</span></td><td><span class="def">true</span></td><td>Nonfarm payrolls.</td></tr>
+                <tr><td><span class="param">InpTradeCPI</span></td><td><span class="def">true</span></td><td>Consumer Price Index.</td></tr>
+                <tr><td><span class="param">InpTradeFOMC</span></td><td><span class="def">true</span></td><td>FOMC rate decision.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Event source (live)</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Input</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><span class="param">InpCalendarLookaheadDays</span></td><td><span class="def">5</span></td><td>How far ahead to fetch the calendar.</td></tr>
+                <tr><td><span class="param">InpCalendarRefreshHours</span></td><td><span class="def">24</span></td><td>Re-fetch only when the cache is older than this.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Broker timezone (tester hardcoded dates only)</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Input</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><span class="param">InpOffsetMode</span></td><td><span class="def">OFFSET_AUTO</span></td><td>Auto assumes an EET broker (GMT+2/+3 with EU DST); or set Manual.</td></tr>
+                <tr><td><span class="param">InpManualOffsetHrs</span></td><td><span class="def">2.0</span></td><td>Manual mode: broker server time = UTC + this.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Broker / execution</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Input</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><span class="param">InpMaxSpreadPoints</span></td><td><span class="def">0</span></td><td>Skip placement if spread exceeds this (0 = no limit).</td></tr>
+                <tr><td><span class="param">InpMagic</span></td><td><span class="def">11022003</span></td><td>Magic number used to tag the EA's orders.</td></tr>
+                <tr><td><span class="param">InpComment</span></td><td><span class="def">"Newsman EA"</span></td><td>Order comment.</td></tr>
+                <tr><td><span class="param">InpSlippagePoints</span></td><td><span class="def">50</span></td><td>Max deviation (points) allowed on execution.</td></tr>
+                <tr><td><span class="param">InpVerbose</span></td><td><span class="def">true</span></td><td>Write detailed journal logging.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="doc-section" id="risk">
+          <h2>Risk warning</h2>
+          <div class="callout danger">
+            <div class="ico">⚠️</div>
+            <div>
+              <h4>Read before you trade real money</h4>
+              <p>
+                Newsman trades around the <b>most volatile moments in the market</b>. News spikes bring
+                slippage, gapping and wild spreads — a stop can fill far from its level, and pyramided
+                positions amplify both wins and losses.
+              </p>
+            </div>
+          </div>
+          <ul class="feature-list">
+            <li><b>Slippage &amp; spread blow-outs</b> around releases can fill orders well away from your intended price.</li>
+            <li><b>Pyramiding increases exposure fast</b> — many positions can be open in one direction at once.</li>
+            <li><b>Virtual SL depends on uptime.</b> If the EA, terminal or VPS goes down, the hidden stop is not enforced.</li>
+            <li><b>Backtests are illustrative only</b> and use a synthetic event schedule, not live calendar data. They do not guarantee future results.</li>
+            <li>Start on a <b>demo account</b>, keep lots tiny, and only trade money you can afford to lose.</li>
+          </ul>
+          <p class="muted">
+            Trading leveraged products is high-risk and may not be suitable for everyone. You use this
+            EA entirely at your own risk; the author accepts no liability for any losses.
+          </p>
+        </section>
+
+        <div class="callout info" style="margin-top:36px;">
+          <div class="ico">💬</div>
+          <div>
+            <h4>Questions?</h4>
+            <p>Reach the author directly on Telegram: <a href="https://t.me/trikohung" target="_blank" rel="noopener">t.me/trikohung</a></p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-inner">
+        <a class="brand" href="index.html">
+          <img src="assets/img/logo.png" alt="CuteCat Trading logo">
+          <span>Cute<b>Cat</b> Trading</span>
+        </a>
+        <div class="muted"><a href="https://t.me/trikohung" target="_blank" rel="noopener">t.me/trikohung</a></div>
+      </div>
+      <p class="footer-disclaimer">
+        Risk warning: Trading leveraged FX products carries a high risk of loss. Newsman EA can lose
+        money, including the entire account balance. Backtests use a synthetic event schedule and are
+        illustrative only. You use this tool entirely at your own risk.
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>
