@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CuteCat Trading — MT5 Expert Advisors</title>
-  <meta name="description" content="CuteCat Trading builds MetaTrader 5 Expert Advisors. Meet Newsman EA (news straddle) and Twin Reaper FX (dual grid engine).">
+  <meta name="description" content="CuteCat Trading builds MetaTrader 5 Expert Advisors. Meet Newsman EA (news straddle), Twin Reaper Engine (dual grid engine) and CatCare EA (gold order-flow momentum).">
   <link rel="icon" href="assets/img/logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,7 +22,8 @@
       <nav class="nav-links">
         <a href="#eas">Expert Advisors</a>
         <a href="newsman.html">Newsman</a>
-        <a href="twin-reaper.html">Twin Reaper</a>
+        <a href="twin-reaper.html">Twin Reaper Engine</a>
+        <a href="catcare.html">CatCare</a>
         <a class="cta" href="https://t.me/trikohung" target="_blank" rel="noopener">Contact</a>
       </nav>
     </div>
@@ -51,7 +52,7 @@
       <div class="container">
         <div class="section-head">
           <h2>The Expert Advisors</h2>
-          <p>Two very different strategies. Both run on MT5, both require a hedging account, and both ship with a complete manual.</p>
+          <p>Three very different strategies. All run on MT5, all require a hedging account, and all ship with a complete manual.</p>
         </div>
 
         <div class="ea-grid">
@@ -80,13 +81,13 @@
             </div>
           </a>
 
-          <!-- Twin Reaper -->
+          <!-- Twin Reaper Engine -->
           <a class="ea-card" href="twin-reaper.html" style="--card-accent:#ff5168; --card-glow:rgba(255,81,104,0.14);">
             <div class="card-banner">
-              <img src="assets/img/twin-reaper.png" alt="Twin Reaper FX emblem">
+              <img src="assets/img/twin-reaper.png" alt="Twin Reaper Engine emblem">
             </div>
             <div class="card-body">
-              <h3>Twin Reaper FX</h3>
+              <h3>Twin Reaper Engine</h3>
               <div class="tagline" style="color:#ff5168;">Two grim reapers, one chart</div>
               <div class="pill-row">
                 <span class="pill">Dual grid</span>
@@ -100,6 +101,30 @@
               </p>
               <div class="card-foot">
                 <span class="read-more" style="color:#ff5168;">Read the manual →</span>
+              </div>
+            </div>
+          </a>
+
+          <!-- CatCare -->
+          <a class="ea-card" href="catcare.html" style="--card-accent:#2dd4bf; --card-glow:rgba(45,212,191,0.14);">
+            <div class="card-banner">
+              <img src="assets/img/catcare.png" alt="CatCare EA emblem">
+            </div>
+            <div class="card-body">
+              <h3>CatCare EA</h3>
+              <div class="tagline" style="color:#2dd4bf;">Trade the order flow on gold</div>
+              <div class="pill-row">
+                <span class="pill">Volume delta</span>
+                <span class="pill">XAUUSD</span>
+                <span class="pill">Order flow</span>
+              </div>
+              <p class="desc">
+                Trades gold on <b>volume-delta momentum</b> — the order flow rebuilt from tick
+                data. Three parallel lanes enter with (or against) the pressure; a Bollinger-anchored
+                stop trails winners, with an optional controlled recovery add.
+              </p>
+              <div class="card-foot">
+                <span class="read-more" style="color:#2dd4bf;">Read the manual →</span>
               </div>
             </div>
           </a>

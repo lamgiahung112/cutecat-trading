@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Twin Reaper FX — Manual | CuteCat Trading</title>
-  <meta name="description" content="Twin Reaper FX manual: a MetaTrader 5 EA with two grid engines — Phantom (USD-strength grid) and Wraith (Bollinger grid) — for GBPUSD.">
+  <title>Twin Reaper Engine — Manual | CuteCat Trading</title>
+  <meta name="description" content="Twin Reaper Engine manual: a MetaTrader 5 EA with two grid engines — Phantom (USD-strength grid) and Wraith (Bollinger grid) — for GBPUSD.">
   <link rel="icon" href="assets/img/twin-reaper.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,22 +22,23 @@
       <nav class="nav-links">
         <a href="index.html#eas">Expert Advisors</a>
         <a href="newsman.html">Newsman</a>
-        <a href="twin-reaper.html">Twin Reaper</a>
+        <a href="twin-reaper.html">Twin Reaper Engine</a>
+        <a href="catcare.html">CatCare</a>
         <a class="cta" href="https://t.me/trikohung" target="_blank" rel="noopener">Contact</a>
       </nav>
     </div>
   </header>
 
   <div class="container crumb">
-    <a href="index.html">Home</a> / <a href="index.html#eas">Expert Advisors</a> / Twin Reaper FX
+    <a href="index.html">Home</a> / <a href="index.html#eas">Expert Advisors</a> / Twin Reaper Engine
   </div>
 
   <!-- Hero -->
   <section class="container ea-hero">
-    <div class="emblem"><img src="assets/img/twin-reaper.png" alt="Twin Reaper FX emblem"></div>
+    <div class="emblem"><img src="assets/img/twin-reaper.png" alt="Twin Reaper Engine emblem"></div>
     <div>
       <div class="eyebrow">MT5 Expert Advisor · Dual Grid</div>
-      <h1>Twin Reaper FX</h1>
+      <h1>Twin Reaper Engine</h1>
       <p class="lead">
         Two independent grid engines in one EA, each on its own magic number so they never
         interfere. <b>Phantom</b> trades a 5-pair USD-strength vote; <b>Wraith</b> trades
@@ -74,7 +75,7 @@
         <section class="doc-section" id="overview">
           <h2>Overview</h2>
           <p>
-            <b>Twin Reaper FX</b> runs <b>two grid engines in one EA</b>, each on its own magic number so
+            <b>Twin Reaper Engine</b> runs <b>two grid engines in one EA</b>, each on its own magic number so
             they operate completely independently. Only the order comment, the two engine on/off switches
             and the two magic numbers are user inputs — every other parameter is hardcoded to the tuned
             profile described below.
@@ -152,7 +153,7 @@
         <section class="doc-section" id="guard">
           <h2>🛡️ Account guard — the circuit breaker</h2>
           <p>
-            Because both engines run no-stop-loss grids, Twin Reaper has a shared <b>account guard</b>. If
+            Because both engines run no-stop-loss grids, Twin Reaper Engine has a shared <b>account guard</b>. If
             either limit is breached, <b>every position from both engines is closed at once</b> and trading
             halts until the EA is reloaded:
           </p>
@@ -181,7 +182,7 @@
             <div class="stat"><div class="num">1.76</div><div class="lbl">Average basket size (orders)</div></div>
           </div>
           <figure>
-            <img src="assets/img/twin-reaper-backtest.png" alt="Twin Reaper FX 2026 GBPUSD backtest — equity curve from 5000 USD">
+            <img src="assets/img/twin-reaper-backtest.png" alt="Twin Reaper Engine 2026 GBPUSD backtest — equity curve from 5000 USD">
             <figcaption>2026 GBPUSD backtest, starting balance 5,000 USD. Illustrative only — not a promise of future results.</figcaption>
           </figure>
           <div class="callout warn">
@@ -248,7 +249,7 @@
             </li>
             <li>
               <h4>Attach to a GBPUSD chart</h4>
-              <p>Open a <b>GBPUSD, H1</b> chart and drag <b>Twin Reaper</b> onto it. Tick <b>Allow Algo Trading</b> in the dialog, and enable the <b>Algo Trading</b> toolbar button.</p>
+              <p>Open a <b>GBPUSD, H1</b> chart and drag <b>Twin Reaper Engine</b> onto it. Tick <b>Allow Algo Trading</b> in the dialog, and enable the <b>Algo Trading</b> toolbar button.</p>
             </li>
             <li>
               <h4>Choose which engines to run</h4>
@@ -329,7 +330,7 @@
         <div class="muted"><a href="https://t.me/trikohung" target="_blank" rel="noopener">t.me/trikohung</a></div>
       </div>
       <p class="footer-disclaimer">
-        Risk warning: Twin Reaper FX is a no-stop-loss, martingale grid EA and can lose money, including
+        Risk warning: Twin Reaper Engine is a no-stop-loss, martingale grid EA and can lose money, including
         the entire account balance. Backtests are illustrative only and do not guarantee future results.
         You use this tool entirely at your own risk.
       </p>

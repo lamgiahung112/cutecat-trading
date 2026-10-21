@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CatCare EA — Manual | CuteCat Trading</title>
+  <meta name="description" content="CatCare EA manual: a MetaTrader 5 Expert Advisor that trades XAUUSD on volume-delta order-flow momentum, with three parallel lanes, a Bollinger-anchored trailing stop and optional recovery.">
+  <link rel="icon" href="assets/img/catcare.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body data-ea="catcare">
+
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="index.html">
+        <img src="assets/img/logo.png" alt="CuteCat Trading logo">
+        <span>Cute<b>Cat</b> Trading</span>
+      </a>
+      <nav class="nav-links">
+        <a href="index.html#eas">Expert Advisors</a>
+        <a href="newsman.html">Newsman</a>
+        <a href="twin-reaper.html">Twin Reaper Engine</a>
+        <a href="catcare.html">CatCare</a>
+        <a class="cta" href="https://t.me/trikohung" target="_blank" rel="noopener">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container crumb">
+    <a href="index.html">Home</a> / <a href="index.html#eas">Expert Advisors</a> / CatCare EA
+  </div>
+
+  <!-- Hero -->
+  <section class="container ea-hero">
+    <div class="emblem"><img src="assets/img/catcare.png" alt="CatCare EA emblem"></div>
+    <div>
+      <div class="eyebrow">MT5 Expert Advisor · Order-Flow Momentum</div>
+      <h1>CatCare EA</h1>
+      <p class="lead">
+        A MetaTrader 5 EA that trades <b>XAUUSD only</b> on <b>volume-delta momentum</b> — the
+        balance of buying vs selling pressure rebuilt from tick data. Three parallel lanes enter
+        with (or deliberately against) the order flow, managed by a Bollinger-anchored trailing stop.
+      </p>
+      <div class="hero-actions" style="justify-content:flex-start;">
+        <a class="btn btn-primary" href="#install">Install guide</a>
+        <a class="btn btn-ghost" href="https://t.me/trikohung" target="_blank" rel="noopener">Ask about the EA</a>
+      </div>
+    </div>
+  </section>
+
+  <main class="container doc">
+    <div class="doc-grid">
+
+      <!-- TOC -->
+      <aside class="toc">
+        <div class="toc-title">On this page</div>
+        <a href="#overview">Overview</a>
+        <a href="#signal">The signal</a>
+        <a href="#lanes">Lanes</a>
+        <a href="#exit">Exit model</a>
+        <a href="#recovery">Recovery mode</a>
+        <a href="#lots">Lot sizing</a>
+        <a href="#scope">Scope indicator</a>
+        <a href="#requirements">Requirements</a>
+        <a href="#install">Installation</a>
+        <a href="#inputs">Inputs reference</a>
+        <a href="#risk">Risk warning</a>
+      </aside>
+
+      <!-- Content -->
+      <div class="doc-content">
+
+        <section class="doc-section" id="overview">
+          <h2>Overview</h2>
+          <p>
+            <b>CatCare EA</b> trades gold (<b>XAUUSD</b>) on <b>volume delta</b>: the real balance of
+            buying versus selling pressure <i>inside</i> each candle. Instead of reacting to lagging
+            indicators, it reconstructs the order flow from tick data to see who is actually in control,
+            enters with that pressure (or deliberately against it), and then manages the trade with a
+            stop designed to cut losers quickly and let winners run. No curve-fit neural nets, no
+            black box — just the raw order flow that moves gold.
+          </p>
+          <div class="callout info">
+            <div class="ico">🎯</div>
+            <div>
+              <h4>One symbol, three independent lanes</h4>
+              <p>
+                CatCare runs three independent <a href="#lanes">lanes</a> (M5, M30 and M15) side by
+                side from a single XAUUSD chart — each with its own direction, threshold and bar count
+                for diversified entries, each holding one position at a time.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="doc-section" id="signal">
+          <h2>The signal — estimated volume delta</h2>
+          <p>
+            Retail gold feeds carry no real, signed volume, so CatCare <b>estimates per-bar delta from
+            raw ticks</b>. Each tick is classified as buyer- or seller-initiated — using the broker's
+            buy/sell tick flags when present, otherwise the <b>tick rule</b> (an uptick is a buy, a
+            downtick a sell, a flat tick carries the prior direction). Every tick counts as <b>±1</b>.
+          </p>
+          <ul class="feature-list">
+            <li>The signal is the <b>rolling sum of per-bar delta</b> over a short window of bars.</li>
+            <li>A lane fires only when the net pressure crosses its <b>threshold</b> — <code>|sum| &ge; Threshold</code>.</li>
+            <li>A lane can run <b>with</b> the pressure, or <b>fade</b> it (trade against the flow) — on gold the fade has carried the edge in testing.</li>
+          </ul>
+          <div class="callout warn">
+            <div class="ico">📏</div>
+            <div>
+              <p>Thresholds are raw tick-delta sums, so they are <b>not comparable across timeframes or brokers</b>. Use the companion <a href="#scope">Scope indicator</a> to read sane threshold values off your own feed before tuning.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="doc-section" id="lanes">
+          <h2>Lanes — three setups in parallel</h2>
+          <p>
+            The EA is organised as independent <b>lanes</b>. Each lane owns its own timeframe,
+            direction, threshold, bar count and magic number, and holds <b>one position at a time</b>.
+            The production build runs three fixed lanes together:
+          </p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Lane</th><th>Timeframe</th><th>Direction</th><th>Threshold</th><th>Bars</th><th>Magic</th></tr></thead>
+              <tbody>
+                <tr><td>0</td><td>M5</td><td>Fade (reverse)</td><td>1500</td><td>3</td><td>710001</td></tr>
+                <tr><td>1</td><td>M30</td><td>With the flow</td><td>4000</td><td>3</td><td>710002</td></tr>
+                <tr><td>2</td><td>M15</td><td>With the flow</td><td>4000</td><td>4</td><td>710003</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="muted">Each lane's magic is <span class="mono">MagicNumber + lane index</span>, so the three never clash and you can identify every position by its lane.</p>
+        </section>
+
+        <section class="doc-section" id="exit">
+          <h2>Exit model — dynamic stop, no fixed take-profit</h2>
+          <p>
+            CatCare uses <b>no take-profit</b>. Winners are given room to develop; the protective stop
+            does the work:
+          </p>
+          <ul class="feature-list">
+            <li><b>Entry stop = the opposite H1 Bollinger band</b> (period 20, deviation 2.0). A BUY stops at the lower band, a SELL at the upper band.</li>
+            <li>A protective fallback stop is used if the band would sit on the wrong side or too close to price.</li>
+            <li>The stop is <b>fixed</b> until the trade is <code>TrailStartPoints</code> in profit, then it <b>trails</b> <code>TrailDistancePoints</code> behind price — <b>only ever tightening</b>, never loosening.</li>
+          </ul>
+        </section>
+
+        <section class="doc-section" id="recovery">
+          <h2>Recovery mode — optional, controlled</h2>
+          <p>
+            Recovery is <b>off by default</b>. When enabled, if a lane's position runs
+            <code>RecoveryPoints</code> <b>against</b> you, the EA adds <b>exactly one</b> same-direction
+            position at <b>2× the primary's lot</b>, sharing the primary's stop. That is a single,
+            measured add — <b>not</b> an open-ended martingale grid.
+          </p>
+          <ul class="feature-list">
+            <li>Only <b>one</b> recovery add per primary cycle; it re-arms when the lane goes flat.</li>
+            <li>Once a lane holds two positions, it switches to <b>basket trailing</b> from the blended break-even, moving both stops together.</li>
+            <li>The shared stop is <b>clamped so it can never lock in a net loss</b> — worst case, the basket exits at break-even.</li>
+          </ul>
+          <div class="callout info">
+            <div class="ico">🔎</div>
+            <div>
+              <p>With the default <code>RecoveryPoints</code> the band stop is often hit before price moves that far against the trade, so recovery only fires when the band happens to sit wider than that — deliberately conservative.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="doc-section" id="lots">
+          <h2>Lot sizing</h2>
+          <p>Each lane is sized independently, by one of two modes:</p>
+          <div class="grid-2">
+            <div class="card">
+              <h4>Fixed lot</h4>
+              <p class="muted"><span class="mono">LOT_FIXED</span> — every entry uses the <code>Lots</code> value.</p>
+            </div>
+            <div class="card">
+              <h4>Balance-scaled</h4>
+              <p class="muted"><span class="mono">LOT_BALANCE_PER_001</span> — 0.01 lot for every <code>DollarsPer001Lot</code> of account balance, so exposure scales as the account grows.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="doc-section" id="scope">
+          <h2>Scope indicator</h2>
+          <p>
+            CatCare ships with a companion <b>Scope</b> subwindow indicator that plots the <b>same</b>
+            estimated per-bar delta (as a histogram) and the rolling-sum <b>signal</b> line, with the
+            threshold drawn as level lines. Its delta math is identical to the EA's, so you can read sane
+            threshold values off your own broker's feed before you tune a lane.
+          </p>
+        </section>
+
+        <section class="doc-section" id="requirements">
+          <h2>Requirements</h2>
+          <ul class="feature-list">
+            <li><b>Symbol: XAUUSD (gold) only.</b> The signal and exits are built around gold.</li>
+            <li><b>Account type: Hedging.</b> Several lanes run in parallel and recovery can add a second position on one symbol — a netting account would merge them and break the design.</li>
+            <li><b>MetaTrader 5.</b> This is an MT5 Expert Advisor.</li>
+            <li>A <b>low-spread broker</b> and a <b>24/5 VPS</b> are strongly recommended.</li>
+            <li>For backtesting, use <b>"Every tick based on real ticks"</b> — the order-flow signal needs genuine tick history (generated ticks fabricate the delta). Run the tester on <b>M5</b> so every lane gets ticked.</li>
+          </ul>
+        </section>
+
+        <section class="doc-section" id="install">
+          <h2>Installation</h2>
+          <ol class="steps">
+            <li>
+              <h4>Copy the EA into MT5</h4>
+              <p>In MetaTrader 5 open <b>File → Open Data Folder</b>, then drop <code>CatCare_EA.ex5</code> into <code>MQL5/Experts/</code>. If you were sent the Scope indicator, drop it into <code>MQL5/Indicators/</code>. Restart MT5 or right-click <b>Navigator → Refresh</b>.</p>
+            </li>
+            <li>
+              <h4>Attach to a XAUUSD chart</h4>
+              <p>Open a <b>XAUUSD</b> chart (any timeframe — the lanes use their own) and drag <b>CatCare EA</b> onto it. Tick <b>Allow Algo Trading</b> in the dialog, and enable the <b>Algo Trading</b> toolbar button.</p>
+            </li>
+            <li>
+              <h4>Start from the defaults</h4>
+              <p>Begin with the default settings, then adjust each lane's threshold to match your broker's tick feed using the <a href="#scope">Scope indicator</a>.</p>
+            </li>
+            <li>
+              <h4>Start on demo</h4>
+              <p>Run it on a <b>demo account</b> first to confirm behaviour at your broker, then move to a small live account with tiny lots.</p>
+            </li>
+          </ol>
+        </section>
+
+        <section class="doc-section" id="inputs">
+          <h2>Inputs reference</h2>
+          <p class="muted">The production build's inputs and their defaults. Order comments read <span class="mono">Runner &lt;TF&gt; &lt;buy|sell&gt;</span> (and <span class="mono">Runner &lt;TF&gt; recover</span> for a recovery add).</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Input</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><span class="param">LotMode</span></td><td><span class="def">LOT_FIXED</span></td><td>How each lane sizes a trade — fixed lot, or balance-scaled.</td></tr>
+                <tr><td><span class="param">Lots</span></td><td><span class="def">0.01</span></td><td><span class="mono">LOT_FIXED</span>: the fixed lot size.</td></tr>
+                <tr><td><span class="param">DollarsPer001Lot</span></td><td><span class="def">1000.0</span></td><td><span class="mono">LOT_BALANCE_PER_001</span>: $ of balance per 0.01 lot.</td></tr>
+                <tr><td><span class="param">MagicNumber</span></td><td><span class="def">710001</span></td><td>Base magic; each lane uses <span class="mono">MagicNumber + lane index</span>.</td></tr>
+                <tr><td><span class="param">TrailStartPoints</span></td><td><span class="def">1250</span></td><td>Profit (points) before the stop begins trailing.</td></tr>
+                <tr><td><span class="param">TrailDistancePoints</span></td><td><span class="def">500</span></td><td>Points the stop is kept behind price once trailing.</td></tr>
+                <tr><td><span class="param">RecoveryEnable</span></td><td><span class="def">false</span></td><td>Enable the one-shot double-lot recovery add.</td></tr>
+                <tr><td><span class="param">RecoveryPoints</span></td><td><span class="def">3500</span></td><td>Adverse points before the recovery add fires.</td></tr>
+                <tr><td><span class="param">SlippagePoints</span></td><td><span class="def">20</span></td><td>Maximum allowed slippage on order execution.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="doc-section" id="risk">
+          <h2>Risk warning</h2>
+          <div class="callout danger">
+            <div class="ico">⚠️</div>
+            <div>
+              <h4>This EA trades with no take-profit and an optional double-lot recovery add</h4>
+              <p>It carries a <b>real risk of loss</b>, up to and including the entire account. Read this section before using it with real money.</p>
+            </div>
+          </div>
+          <ul class="feature-list">
+            <li><b>No take-profit.</b> Trades are closed by the Bollinger-anchored stop and trail — a sharp reversal can cut a winner back toward break-even.</li>
+            <li><b>Recovery mode</b> (when enabled) adds a position at twice the lot — a controlled add, but it still increases exposure during an adverse move.</li>
+            <li><b>Thresholds are feed-specific.</b> A badly tuned threshold can over- or under-trade on your broker; validate with the Scope indicator first.</li>
+            <li><b>Past performance and backtests do not guarantee future results.</b> Backtest thoroughly on real ticks and run on a <b>demo</b> account first.</li>
+            <li>Use money you can afford to lose, keep the start lot tiny, and size exposure to your balance.</li>
+          </ul>
+          <p class="muted">
+            Trading leveraged products is high-risk and may not be suitable for everyone. You use this
+            EA entirely at your own risk; the author accepts no liability for any losses.
+          </p>
+        </section>
+
+        <div class="callout info" style="margin-top:36px;">
+          <div class="ico">💬</div>
+          <div>
+            <h4>Questions?</h4>
+            <p>Reach the author directly on Telegram: <a href="https://t.me/trikohung" target="_blank" rel="noopener">t.me/trikohung</a>. Updates are free for all buyers.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-inner">
+        <a class="brand" href="index.html">
+          <img src="assets/img/logo.png" alt="CuteCat Trading logo">
+          <span>Cute<b>Cat</b> Trading</span>
+        </a>
+        <div class="muted"><a href="https://t.me/trikohung" target="_blank" rel="noopener">t.me/trikohung</a></div>
+      </div>
+      <p class="footer-disclaimer">
+        Risk warning: CatCare EA trades with no take-profit and an optional double-lot recovery add, and
+        can lose money, including the entire account balance. Backtests are illustrative only and do not
+        guarantee future results. You use this tool entirely at your own risk.
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>
