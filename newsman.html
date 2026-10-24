@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Newsman EA — Manual | CuteCat Trading</title>
-  <meta name="description" content="Newsman EA manual: a MetaTrader 5 news-straddle Expert Advisor for NFP, CPI and FOMC. Strategy, inputs, requirements and risk.">
+  <meta name="description" content="Newsman EA v2.1 manual: a MetaTrader 5 news-straddle Expert Advisor for high-impact USD releases (NFP, CPI, FOMC, PPI). ForexFactory-driven, with profiles, a unified schedule queue and a Telegram control bot.">
   <link rel="icon" href="assets/img/newsman.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,12 +36,13 @@
   <section class="container ea-hero">
     <div class="emblem"><img src="assets/img/newsman.png" alt="Newsman EA emblem"></div>
     <div>
-      <div class="eyebrow">MT5 Expert Advisor · News Straddle</div>
+      <div class="eyebrow">MT5 Expert Advisor · News Straddle · v2.1</div>
       <h1>Newsman EA</h1>
       <p class="lead">
-        A news-straddle EA that brackets high-impact USD releases — NFP, CPI and FOMC —
-        with stop orders that carry <b>no visible stop-loss</b>, then trails and pyramids
-        the winning side.
+        A news-straddle EA that brackets high-impact USD releases — NFP, CPI, FOMC (and optionally PPI) —
+        with stop orders that carry <b>no visible stop-loss</b>, then trails and pyramids the winning side.
+        Driven by the <b>ForexFactory</b> calendar, with reusable <b>profiles</b>, one unified
+        <b>schedule queue</b>, and an optional <b>Telegram control bot</b>.
       </p>
       <div class="hero-actions" style="justify-content:flex-start;">
         <a class="btn btn-primary" href="#install">Install guide</a>
@@ -59,6 +60,8 @@
         <a href="#overview">Overview</a>
         <a href="#how">How it works</a>
         <a href="#events">Event source</a>
+        <a href="#profiles">Profiles &amp; the queue</a>
+        <a href="#telegram">Telegram bot</a>
         <a href="#requirements">Requirements</a>
         <a href="#install">Installation</a>
         <a href="#inputs">Inputs reference</a>
@@ -79,11 +82,18 @@
           <p>
             The pending orders deliberately carry <b>no stop-loss</b> while they rest — so a broker
             can't see the SL and harvest it as liquidity. The instant a leg fills, a protective stop
-            is attached and trailed, and the position can <b>pyramid</b> as price
+            is attached and trailed (ghost-scalper style), and the position can <b>pyramid</b> as price
             keeps running in your favour.
           </p>
+          <p>
+            <b>v2.1</b> is built around two ideas that run through one shared lifecycle:
+            <b>profiles</b> (named bundles of settings — symbol, lots, distance, SL/TP, trailing,
+            pyramiding) and one <b>queue</b> of scheduled straddles that holds both the automatic
+            ForexFactory events and anything you add by hand. An optional Telegram bot lets you drive
+            the whole thing from your phone.
+          </p>
           <div class="stats">
-            <div class="stat"><div class="num">3</div><div class="lbl">Event types (NFP · CPI · FOMC)</div></div>
+            <div class="stat"><div class="num">4</div><div class="lbl">Event types (NFP · CPI · FOMC · PPI)</div></div>
             <div class="stat"><div class="num">0</div><div class="lbl">Visible SL on pending orders</div></div>
             <div class="stat"><div class="num">150</div><div class="lbl">Default straddle distance (points)</div></div>
             <div class="stat"><div class="num">Hedging</div><div class="lbl">Account type required</div></div>
@@ -95,14 +105,18 @@
 
           <h3>1 · Arm before the release</h3>
           <p>
-            Newsman keeps a schedule of upcoming NFP, CPI and FOMC releases. <code>InpSecondsBefore</code>
-            seconds before a release it drops two pending orders around price:
+            Newsman keeps a schedule of upcoming releases. <code>InpSecondsBefore</code> seconds before
+            an event it drops two pending orders around price:
           </p>
           <ul class="feature-list">
             <li><b>Buy-stop</b> placed <code>InpDistancePoints</code> above the current price.</li>
             <li><b>Sell-stop</b> placed <code>InpDistancePoints</code> below the current price.</li>
             <li>Both rest with <b>no stop-loss attached</b> — the stop is deliberately kept off the order.</li>
           </ul>
+          <p class="muted">
+            Placement and management run on <b>every tick</b>, so the straddle still arms even in a thin,
+            quiet pre-news market rather than waiting on a once-a-second timer.
+          </p>
 
           <h3>2 · A leg fills on the spike</h3>
           <p>
@@ -110,15 +124,18 @@
             protective stop <code>InpInitialSLPoints</code> away and begins trailing it: once the trade
             is <code>InpTrailActivationPoints</code> in profit, the stop follows price at a distance of
             <code>InpTrailDistancePoints</code>, re-modifying only when it can improve by at least
-            <code>InpTrailStepPoints</code>.
+            <code>InpTrailStepPoints</code>. An optional server-side take-profit
+            (<code>InpTakeProfitPoints</code>, 0 = off) can be attached on fill as well.
           </p>
 
           <h3>3 · Pyramiding (optional)</h3>
           <p>
-            With <code>InpEnablePyramid</code> on, Newsman adds further positions every
-            <code>InpPyramidStepPoints</code> of favourable move, up to <code>InpPyramidMaxPositions</code>
-            per direction. All same-direction positions <b>share one trailed stop</b>, so the whole
-            group is protected together.
+            With <code>InpEnablePyramid</code> on, Newsman adds further positions as price runs, spaced
+            <code>InpPyramidStepPoints</code> beyond the <b>furthest open position</b> (one added per tick
+            once price has moved a step past the front), up to <code>InpPyramidMaxPositions</code> per
+            direction. All same-direction positions <b>share one trailed stop</b>, so the whole group is
+            protected together. Because the spacing is measured from live positions, it stays correct
+            after a restart or partial close and never places behind the front runner.
           </p>
 
           <h3>4 · The opposite leg</h3>
@@ -142,10 +159,11 @@
               <h4>Virtual SL — hide the stop entirely</h4>
               <p>
                 With <code>InpVirtualSL</code> on, <b>no server-side stop is used at all</b>. The
-                protective/trailed level is held inside the EA's own logic, and when price trades
-                through it the EA closes the whole same-direction group itself. This hides the stop
-                from the broker completely — at the cost of requiring the EA (and your VPS) to stay
-                running to honour it.
+                protective/trailed level is held inside the EA's own logic (and mirrored to disk for
+                crash recovery), and when price trades through it the EA closes the whole same-direction
+                group itself. This hides the stop from the broker completely — at the cost of requiring
+                the EA (and your VPS) to stay running to honour it. A take-profit is harmless to rest on
+                the server, so it is still used even in virtual mode.
               </p>
             </div>
           </div>
@@ -157,28 +175,120 @@
             <div class="card">
               <h4>🟢 Live trading</h4>
               <p class="muted">
-                Reads the <b>MT5 economic calendar</b> (USD, high-impact only). Event times are already
-                in broker-server time. Upcoming releases are fetched ahead and cached to
-                <code>newsman_news_cache.csv</code>, refreshed on a daily cycle so the EA still arms
-                even in a thin pre-news market.
+                Reads the <b>ForexFactory</b> weekly JSON feed. Each event's timestamp carries an explicit
+                UTC offset, which Newsman converts to broker-server time using the measured server↔GMT
+                offset. Only <b>USD · High-impact</b> NFP / CPI / FOMC (and PPI, if enabled) are armed;
+                the full week is kept for the Telegram <code>/news</code> list. The feed refreshes only
+                when the EA is idle (no event window and nothing open).
               </p>
             </div>
             <div class="card">
               <h4>🧪 Strategy Tester</h4>
               <p class="muted">
-                The economic calendar isn't available in the tester, so Newsman builds its own
-                schedule: NFP from the first-Friday-of-the-month rule, plus a hardcoded CPI/FOMC
-                list. UTC times are converted to broker-server time using the offset settings.
+                There is no WebRequest in the tester, so Newsman builds its own schedule: NFP from the
+                first-Friday-of-the-month rule, plus hardcoded CPI / FOMC / PPI release dates (actual
+                historical dates). UTC times are converted to broker-server time using the offset settings
+                below.
               </p>
             </div>
           </div>
           <div class="callout warn">
-            <div class="ico">📅</div>
+            <div class="ico">🌐</div>
             <div>
+              <h4>WebRequest must be whitelisted (live)</h4>
               <p>
-                For live trading, make sure the <b>economic calendar is enabled</b> in your terminal
-                (Tools → Options → Community / Calendar). If the calendar returns no USD events,
-                Newsman has nothing to arm.
+                For live trading, add the feed host to <b>Tools → Options → Expert Advisors → “Allow
+                WebRequest for listed URL”</b>:
+              </p>
+              <ul class="feature-list">
+                <li><code>https://nfs.faireconomy.media</code> — the ForexFactory feed (required).</li>
+                <li><code>https://api.telegram.org</code> — only if you use the Telegram bot.</li>
+              </ul>
+              <p class="muted">Without the whitelist the EA cannot fetch events and has nothing to arm.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="doc-section" id="profiles">
+          <h2>Profiles &amp; the queue</h2>
+          <p>
+            Everything Newsman trades runs through one generic lifecycle, keyed by its own settings rather
+            than the chart symbol. Two concepts drive it:
+          </p>
+          <div class="grid-2">
+            <div class="card">
+              <h4>📦 Profile</h4>
+              <p class="muted">
+                A named bundle of <code>symbol</code>, <code>magic</code>, <code>lots</code>,
+                <code>distance</code>, SL / TP, trailing and pyramiding. A profile <b>is</b> a position
+                group (a unique symbol + magic), so its trailed anchors live on the profile.
+                <b>Profile #0</b> is the default: it is re-seeded from the <code>Inp*</code> inputs on
+                every startup, and can be edited live over Telegram. Extra profiles persist to disk.
+              </p>
+            </div>
+            <div class="card">
+              <h4>🗂️ Queue</h4>
+              <p class="muted">
+                One list of scheduled straddles. <b>Both</b> the automatic ForexFactory events
+                (→ profile #0) <b>and</b> your Telegram <code>/add</code> jobs live here and are driven
+                identically — only the source (auto vs. manual) differs. Manual jobs persist; auto events
+                are always re-derived from the feed.
+              </p>
+            </div>
+          </div>
+          <p class="muted">
+            Delete an auto event with <code>/del</code> and Newsman remembers it, so the next feed refresh
+            won't re-arm it. Open positions always keep running under their own profile, independent of the
+            queue.
+          </p>
+        </section>
+
+        <section class="doc-section" id="telegram">
+          <h2>Telegram bot (optional)</h2>
+          <p>
+            A second, independent control channel for live trading. The bot <b>only answers commands</b> —
+            it does not push trade notifications — and it is <b>silent while any position is open</b>,
+            polling for commands only when flat so it never competes with live stop management. Messages
+            from any chat other than your authorized <code>InpTelegramChatId</code> are ignored.
+          </p>
+
+          <h3>Commands</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+              <tbody>
+                <tr><td><span class="param">/news</span></td><td>This week's events, in broker-server time.</td></tr>
+                <tr><td><span class="param">/profiles</span></td><td>List all profiles.</td></tr>
+                <tr><td><span class="param">/profile new|&lt;id&gt; key=val …</span></td><td>Create or edit a profile (keys below).</td></tr>
+                <tr><td><span class="param">/delprofile &lt;id&gt;</span></td><td>Delete a profile (not #0).</td></tr>
+                <tr><td><span class="param">/add &lt;datetime&gt; &lt;profile#&gt;</span></td><td>Schedule a straddle, e.g. <code>/add 2026-11-07-13:30-5 0</code> (the 16-char date/time, then a signed UTC offset; <code>-5</code> = UTC-5).</td></tr>
+                <tr><td><span class="param">/list</span></td><td>Show the queue (auto + manual) with status.</td></tr>
+                <tr><td><span class="param">/del &lt;jobid&gt;</span></td><td>Remove a queued job (an auto job is also suppressed).</td></tr>
+                <tr><td><span class="param">/status</span></td><td>Current EA status.</td></tr>
+                <tr><td><span class="param">/help</span></td><td>Full command help.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Profile keys (<code>key=val</code>)</h3>
+          <p class="muted">
+            <code>name</code> · <code>symbol</code> · <code>magic</code> · <code>lots</code> ·
+            <code>dist</code> · <code>sl</code> · <code>tp</code> · <code>tact</code> ·
+            <code>tdist</code> · <code>tstep</code> · <code>vsl</code> · <code>pyr</code> ·
+            <code>pstep</code> · <code>pmax</code> · <code>before</code> · <code>keep</code> ·
+            <code>oco</code> — the same knobs as the inputs below. Profile #0 edits persist for the
+            session; on the next restart the <code>Inp*</code> inputs win again.
+          </p>
+
+          <div class="callout info">
+            <div class="ico">🔑</div>
+            <div>
+              <h4>Setup</h4>
+              <p>
+                Create a bot with <b>@BotFather</b> to get a token, set <code>InpTelegramToken</code> and
+                your numeric <code>InpTelegramChatId</code>, enable <code>InpTelegramEnable</code>, and
+                whitelist <code>https://api.telegram.org</code> for WebRequest. The bot is disabled in the
+                Strategy Tester.
               </p>
             </div>
           </div>
@@ -189,7 +299,7 @@
           <ul class="feature-list">
             <li><b>MetaTrader 5</b> — this is an MT5 Expert Advisor (<code>newsman.ex5</code>).</li>
             <li><b>Hedging account.</b> Live trading needs a hedging account — the two-sided straddle and pyramiding both open multiple positions per symbol, which a netting account forbids. On a netting account the EA detects this and disables trading. <i>(The tester is exempt, so you can still backtest on netting.)</i></li>
-            <li><b>Economic calendar enabled</b> in the terminal for live mode.</li>
+            <li><b>WebRequest whitelisted</b> for <code>nfs.faireconomy.media</code> (and <code>api.telegram.org</code> if using the bot).</li>
             <li><b>A VPS / 24-5 uptime</b> is strongly recommended — especially with Virtual SL, where the EA must be running to honour the stop.</li>
             <li>Attach it to the chart of the symbol you want to straddle (a major USD pair such as EURUSD or a USD-driven instrument).</li>
           </ul>
@@ -203,8 +313,12 @@
               <p>In MetaTrader 5 open <b>File → Open Data Folder</b>, then drop <code>newsman.ex5</code> into <code>MQL5/Experts/</code>. Restart MT5 or right-click <b>Navigator → Refresh</b>.</p>
             </li>
             <li>
-              <h4>Enable algo trading &amp; the calendar</h4>
-              <p>Turn on the <b>Algo Trading</b> toolbar button. Under <b>Tools → Options</b>, make sure the economic calendar is enabled so live events can be fetched.</p>
+              <h4>Whitelist WebRequest</h4>
+              <p>Under <b>Tools → Options → Expert Advisors</b>, tick <b>Allow WebRequest for listed URL</b> and add <code>https://nfs.faireconomy.media</code> (and <code>https://api.telegram.org</code> for the Telegram bot).</p>
+            </li>
+            <li>
+              <h4>Enable algo trading</h4>
+              <p>Turn on the <b>Algo Trading</b> toolbar button so the EA can place orders.</p>
             </li>
             <li>
               <h4>Attach to a chart</h4>
@@ -216,7 +330,7 @@
             </li>
             <li>
               <h4>Confirm it armed</h4>
-              <p>Check the <b>Experts</b> journal — Newsman logs each event it arms (e.g. <span class="mono">armed NFP @ … (server)</span>). A smiley face on the chart means it's running.</p>
+              <p>Check the <b>Experts</b> journal — Newsman logs the feed fetch and each event it arms (e.g. <span class="mono">armed NFP @ … (server)</span>). A smiley face on the chart means it's running.</p>
             </li>
           </ol>
         </section>
@@ -246,6 +360,7 @@
               <tbody>
                 <tr><td><span class="param">InpVirtualSL</span></td><td><span class="def">false</span></td><td>Keep <b>no</b> server-side stop; the EA holds the SL in logic and closes the group itself when price hits it.</td></tr>
                 <tr><td><span class="param">InpInitialSLPoints</span></td><td><span class="def">450</span></td><td>Protective SL attached the moment a leg fills (points, 0 = none). Kept off the pending order so it can't rest as liquidity.</td></tr>
+                <tr><td><span class="param">InpTakeProfitPoints</span></td><td><span class="def">0</span></td><td>Server-side take-profit attached on fill (points, 0 = none). Harmless to rest, so applied even in virtual-SL mode.</td></tr>
                 <tr><td><span class="param">InpTrailActivationPoints</span></td><td><span class="def">200</span></td><td>Profit (points) before the trail engages.</td></tr>
                 <tr><td><span class="param">InpTrailDistancePoints</span></td><td><span class="def">100</span></td><td>SL trails this far behind price (points).</td></tr>
                 <tr><td><span class="param">InpTrailStepPoints</span></td><td><span class="def">50</span></td><td>Minimum SL improvement before it re-modifies (points).</td></tr>
@@ -259,8 +374,8 @@
               <thead><tr><th>Input</th><th>Default</th><th>Description</th></tr></thead>
               <tbody>
                 <tr><td><span class="param">InpEnablePyramid</span></td><td><span class="def">true</span></td><td>Add positions as price runs; all same-direction positions share one SL.</td></tr>
-                <tr><td><span class="param">InpPyramidStepPoints</span></td><td><span class="def">100</span></td><td>Add another position every this many points of favourable move.</td></tr>
-                <tr><td><span class="param">InpPyramidMaxPositions</span></td><td><span class="def">100</span></td><td>Max total positions per direction (including the first).</td></tr>
+                <tr><td><span class="param">InpPyramidStepPoints</span></td><td><span class="def">100</span></td><td>Spacing between pyramid levels, measured beyond the furthest open position (points).</td></tr>
+                <tr><td><span class="param">InpPyramidMaxPositions</span></td><td><span class="def">20</span></td><td>Max total positions per direction (including the first).</td></tr>
               </tbody>
             </table>
           </div>
@@ -271,8 +386,9 @@
               <thead><tr><th>Input</th><th>Default</th><th>Description</th></tr></thead>
               <tbody>
                 <tr><td><span class="param">InpTradeNFP</span></td><td><span class="def">true</span></td><td>Nonfarm payrolls.</td></tr>
-                <tr><td><span class="param">InpTradeCPI</span></td><td><span class="def">true</span></td><td>Consumer Price Index.</td></tr>
+                <tr><td><span class="param">InpTradeCPI</span></td><td><span class="def">true</span></td><td>Consumer Price Index (headline).</td></tr>
                 <tr><td><span class="param">InpTradeFOMC</span></td><td><span class="def">true</span></td><td>FOMC rate decision.</td></tr>
+                <tr><td><span class="param">InpTradePPI</span></td><td><span class="def">false</span></td><td>Producer Price Index (headline). Off by default.</td></tr>
               </tbody>
             </table>
           </div>
@@ -282,8 +398,7 @@
             <table>
               <thead><tr><th>Input</th><th>Default</th><th>Description</th></tr></thead>
               <tbody>
-                <tr><td><span class="param">InpCalendarLookaheadDays</span></td><td><span class="def">5</span></td><td>How far ahead to fetch the calendar.</td></tr>
-                <tr><td><span class="param">InpCalendarRefreshHours</span></td><td><span class="def">24</span></td><td>Re-fetch only when the cache is older than this.</td></tr>
+                <tr><td><span class="param">InpCalendarRefreshHours</span></td><td><span class="def">6</span></td><td>Re-fetch the ForexFactory feed only when the cache is older than this.</td></tr>
               </tbody>
             </table>
           </div>
@@ -304,11 +419,22 @@
             <table>
               <thead><tr><th>Input</th><th>Default</th><th>Description</th></tr></thead>
               <tbody>
-                <tr><td><span class="param">InpMaxSpreadPoints</span></td><td><span class="def">0</span></td><td>Skip placement if spread exceeds this (0 = no limit).</td></tr>
-                <tr><td><span class="param">InpMagic</span></td><td><span class="def">11022003</span></td><td>Magic number used to tag the EA's orders.</td></tr>
+                <tr><td><span class="param">InpMagic</span></td><td><span class="def">11022003</span></td><td>Magic number used to tag the EA's orders (schedules use <code>InpMagic + schedule id</code>).</td></tr>
                 <tr><td><span class="param">InpComment</span></td><td><span class="def">"Newsman EA"</span></td><td>Order comment.</td></tr>
-                <tr><td><span class="param">InpSlippagePoints</span></td><td><span class="def">50</span></td><td>Max deviation (points) allowed on execution.</td></tr>
                 <tr><td><span class="param">InpVerbose</span></td><td><span class="def">true</span></td><td>Write detailed journal logging.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Telegram (optional, live only)</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Input</th><th>Default</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><span class="param">InpTelegramEnable</span></td><td><span class="def">false</span></td><td>Enable the Telegram control bot.</td></tr>
+                <tr><td><span class="param">InpTelegramToken</span></td><td><span class="def">""</span></td><td>Bot token from @BotFather.</td></tr>
+                <tr><td><span class="param">InpTelegramChatId</span></td><td><span class="def">0</span></td><td>Authorized numeric chat id (messages from any other chat are ignored).</td></tr>
+                <tr><td><span class="param">InpTelegramPollSeconds</span></td><td><span class="def">3</span></td><td>How often to poll Telegram for commands (seconds), when flat.</td></tr>
               </tbody>
             </table>
           </div>
@@ -331,7 +457,7 @@
             <li><b>Slippage &amp; spread blow-outs</b> around releases can fill orders well away from your intended price.</li>
             <li><b>Pyramiding increases exposure fast</b> — many positions can be open in one direction at once.</li>
             <li><b>Virtual SL depends on uptime.</b> If the EA, terminal or VPS goes down, the hidden stop is not enforced.</li>
-            <li><b>Backtests are illustrative only</b> and use a synthetic event schedule, not live calendar data. They do not guarantee future results.</li>
+            <li><b>Backtests are illustrative only</b> and use a fixed historical event schedule, not a live feed. They do not guarantee future results.</li>
             <li>Start on a <b>demo account</b>, keep lots tiny, and only trade money you can afford to lose.</li>
           </ul>
           <p class="muted">
@@ -363,8 +489,8 @@
       </div>
       <p class="footer-disclaimer">
         Risk warning: Trading leveraged FX products carries a high risk of loss. Newsman EA can lose
-        money, including the entire account balance. Backtests use a synthetic event schedule and are
-        illustrative only. You use this tool entirely at your own risk.
+        money, including the entire account balance. Backtests use a fixed historical event schedule and
+        are illustrative only. You use this tool entirely at your own risk.
       </p>
     </div>
   </footer>
