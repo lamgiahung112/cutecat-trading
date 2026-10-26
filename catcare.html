@@ -88,9 +88,9 @@
             <div>
               <h4>One symbol, three independent lanes</h4>
               <p>
-                CatCare runs three independent <a href="#lanes">lanes</a> (M5, M30 and M15) side by
-                side from a single XAUUSD chart — each with its own direction, threshold and bar count
-                for diversified entries, each holding one position at a time.
+                CatCare runs three independent <a href="#lanes">lanes</a> side by
+                side from a single XAUUSD chart — each with its own timeframe, direction, threshold and
+                bar count for diversified entries, each holding one position at a time.
               </p>
             </div>
           </div>
@@ -107,7 +107,7 @@
           <ul class="feature-list">
             <li>The signal is the <b>rolling sum of per-bar delta</b> over a short window of bars.</li>
             <li>A lane fires only when the net pressure crosses its <b>threshold</b> — <code>|sum| &ge; Threshold</code>.</li>
-            <li>A lane can run <b>with</b> the pressure, or <b>fade</b> it (trade against the flow) — on gold the fade has carried the edge in testing.</li>
+            <li>A lane can run <b>with</b> the pressure, or <b>fade</b> it (trade against the flow), depending on how that lane is configured.</li>
           </ul>
           <div class="callout warn">
             <div class="ico">📏</div>
@@ -121,20 +121,17 @@
           <h2>Lanes — three setups in parallel</h2>
           <p>
             The EA is organised as independent <b>lanes</b>. Each lane owns its own timeframe,
-            direction, threshold, bar count and magic number, and holds <b>one position at a time</b>.
-            The production build runs three fixed lanes together:
+            direction, threshold and bar count, and holds <b>one position at a time</b>. The production
+            build runs <b>three fixed lanes</b> together — a diversified blend of timeframes and
+            directions, pre-tuned and locked into the compiled EA.
           </p>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Lane</th><th>Timeframe</th><th>Direction</th><th>Threshold</th><th>Bars</th><th>Magic</th></tr></thead>
-              <tbody>
-                <tr><td>0</td><td>M5</td><td>Fade (reverse)</td><td>1500</td><td>3</td><td>710001</td></tr>
-                <tr><td>1</td><td>M30</td><td>With the flow</td><td>4000</td><td>3</td><td>710002</td></tr>
-                <tr><td>2</td><td>M15</td><td>With the flow</td><td>4000</td><td>4</td><td>710003</td></tr>
-              </tbody>
-            </table>
+          <div class="callout info">
+            <div class="ico">🔒</div>
+            <div>
+              <p>The exact per-lane timeframes, directions and thresholds are baked into the production build and aren't published. Use the <a href="#scope">Scope indicator</a> to read sane threshold values off your own feed when you adjust them.</p>
+            </div>
           </div>
-          <p class="muted">Each lane's magic is <span class="mono">MagicNumber + lane index</span>, so the three never clash and you can identify every position by its lane.</p>
+          <p class="muted">Each lane carries its own magic number, so the three never clash and you can identify every position by its lane from the order comment (<span class="mono">Runner &lt;TF&gt; &lt;buy|sell&gt;</span>).</p>
         </section>
 
         <section class="doc-section" id="exit">
@@ -203,7 +200,7 @@
             <li><b>Account type: Hedging.</b> Several lanes run in parallel and recovery can add a second position on one symbol — a netting account would merge them and break the design.</li>
             <li><b>MetaTrader 5.</b> This is an MT5 Expert Advisor.</li>
             <li>A <b>low-spread broker</b> and a <b>24/5 VPS</b> are strongly recommended.</li>
-            <li>For backtesting, use <b>"Every tick based on real ticks"</b> — the order-flow signal needs genuine tick history (generated ticks fabricate the delta). Run the tester on <b>M5</b> so every lane gets ticked.</li>
+            <li>For backtesting, use <b>"Every tick based on real ticks"</b> — the order-flow signal needs genuine tick history (generated ticks fabricate the delta). Run the tester on a <b>low timeframe</b> so every lane gets ticked.</li>
           </ul>
         </section>
 
@@ -239,7 +236,7 @@
                 <tr><td><span class="param">LotMode</span></td><td><span class="def">LOT_FIXED</span></td><td>How each lane sizes a trade — fixed lot, or balance-scaled.</td></tr>
                 <tr><td><span class="param">Lots</span></td><td><span class="def">0.01</span></td><td><span class="mono">LOT_FIXED</span>: the fixed lot size.</td></tr>
                 <tr><td><span class="param">DollarsPer001Lot</span></td><td><span class="def">1000.0</span></td><td><span class="mono">LOT_BALANCE_PER_001</span>: $ of balance per 0.01 lot.</td></tr>
-                <tr><td><span class="param">MagicNumber</span></td><td><span class="def">710001</span></td><td>Base magic; each lane uses <span class="mono">MagicNumber + lane index</span>.</td></tr>
+                <tr><td><span class="param">MagicNumber</span></td><td><span class="def">710001</span></td><td>Base magic number; each lane derives its own id from this so positions never clash.</td></tr>
                 <tr><td><span class="param">TrailStartPoints</span></td><td><span class="def">1250</span></td><td>Profit (points) before the stop begins trailing.</td></tr>
                 <tr><td><span class="param">TrailDistancePoints</span></td><td><span class="def">500</span></td><td>Points the stop is kept behind price once trailing.</td></tr>
                 <tr><td><span class="param">RecoveryEnable</span></td><td><span class="def">false</span></td><td>Enable the one-shot double-lot recovery add.</td></tr>
