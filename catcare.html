@@ -63,7 +63,6 @@
         <a href="#exit">Exit model</a>
         <a href="#recovery">Recovery mode</a>
         <a href="#lots">Lot sizing</a>
-        <a href="#scope">Scope indicator</a>
         <a href="#requirements">Requirements</a>
         <a href="#install">Installation</a>
         <a href="#inputs">Inputs reference</a>
@@ -109,12 +108,6 @@
             <li>A lane fires only when the net pressure crosses its <b>threshold</b> — <code>|sum| &ge; Threshold</code>.</li>
             <li>A lane can run <b>with</b> the pressure, or <b>fade</b> it (trade against the flow), depending on how that lane is configured.</li>
           </ul>
-          <div class="callout warn">
-            <div class="ico">📏</div>
-            <div>
-              <p>Thresholds are raw tick-delta sums, so they are <b>not comparable across timeframes or brokers</b>. Use the companion <a href="#scope">Scope indicator</a> to read sane threshold values off your own feed before tuning.</p>
-            </div>
-          </div>
         </section>
 
         <section class="doc-section" id="lanes">
@@ -128,10 +121,10 @@
           <div class="callout info">
             <div class="ico">🔒</div>
             <div>
-              <p>The exact per-lane timeframes, directions and thresholds are baked into the production build and aren't published. Use the <a href="#scope">Scope indicator</a> to read sane threshold values off your own feed when you adjust them.</p>
+              <p>The exact per-lane timeframes, directions, thresholds and bar counts are baked into the production build — they aren't published or user-adjustable.</p>
             </div>
           </div>
-          <p class="muted">Each lane carries its own magic number, so the three never clash and you can identify every position by its lane from the order comment (<span class="mono">Runner &lt;TF&gt; &lt;buy|sell&gt;</span>).</p>
+          <p class="muted">Each lane carries its own magic number, so the three never clash and you can identify every position by its lane from the order comment (<span class="mono">CatCare &lt;TF&gt; &lt;buy|sell&gt;</span>).</p>
         </section>
 
         <section class="doc-section" id="exit">
@@ -183,16 +176,6 @@
           </div>
         </section>
 
-        <section class="doc-section" id="scope">
-          <h2>Scope indicator</h2>
-          <p>
-            CatCare ships with a companion <b>Scope</b> subwindow indicator that plots the <b>same</b>
-            estimated per-bar delta (as a histogram) and the rolling-sum <b>signal</b> line, with the
-            threshold drawn as level lines. Its delta math is identical to the EA's, so you can read sane
-            threshold values off your own broker's feed before you tune a lane.
-          </p>
-        </section>
-
         <section class="doc-section" id="requirements">
           <h2>Requirements</h2>
           <ul class="feature-list">
@@ -209,7 +192,7 @@
           <ol class="steps">
             <li>
               <h4>Copy the EA into MT5</h4>
-              <p>In MetaTrader 5 open <b>File → Open Data Folder</b>, then drop <code>CatCare_EA.ex5</code> into <code>MQL5/Experts/</code>. If you were sent the Scope indicator, drop it into <code>MQL5/Indicators/</code>. Restart MT5 or right-click <b>Navigator → Refresh</b>.</p>
+              <p>In MetaTrader 5 open <b>File → Open Data Folder</b>, then drop <code>CatCare_EA.ex5</code> into <code>MQL5/Experts/</code>. Restart MT5 or right-click <b>Navigator → Refresh</b>.</p>
             </li>
             <li>
               <h4>Attach to a XAUUSD chart</h4>
@@ -217,7 +200,7 @@
             </li>
             <li>
               <h4>Start from the defaults</h4>
-              <p>Begin with the default settings, then adjust each lane's threshold to match your broker's tick feed using the <a href="#scope">Scope indicator</a>.</p>
+              <p>Begin with the default settings. The lanes are fixed in the build; the inputs you can adjust are lot sizing, the trailing stop and the optional recovery add.</p>
             </li>
             <li>
               <h4>Start on demo</h4>
@@ -228,7 +211,7 @@
 
         <section class="doc-section" id="inputs">
           <h2>Inputs reference</h2>
-          <p class="muted">The production build's inputs and their defaults. Order comments read <span class="mono">Runner &lt;TF&gt; &lt;buy|sell&gt;</span> (and <span class="mono">Runner &lt;TF&gt; recover</span> for a recovery add).</p>
+          <p class="muted">The production build's inputs and their defaults. Order comments read <span class="mono">CatCare &lt;TF&gt; &lt;buy|sell&gt;</span> (and <span class="mono">CatCare &lt;TF&gt; recover</span> for a recovery add).</p>
           <div class="table-wrap">
             <table>
               <thead><tr><th>Input</th><th>Default</th><th>Description</th></tr></thead>
@@ -259,7 +242,6 @@
           <ul class="feature-list">
             <li><b>No take-profit.</b> Trades are closed by the Bollinger-anchored stop and trail — a sharp reversal can cut a winner back toward break-even.</li>
             <li><b>Recovery mode</b> (when enabled) adds a position at twice the lot — a controlled add, but it still increases exposure during an adverse move.</li>
-            <li><b>Thresholds are feed-specific.</b> A badly tuned threshold can over- or under-trade on your broker; validate with the Scope indicator first.</li>
             <li><b>Past performance and backtests do not guarantee future results.</b> Backtest thoroughly on real ticks and run on a <b>demo</b> account first.</li>
             <li>Use money you can afford to lose, keep the start lot tiny, and size exposure to your balance.</li>
           </ul>
