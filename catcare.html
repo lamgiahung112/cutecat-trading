@@ -133,7 +133,7 @@
             <div class="card engine-card">
               <div class="engine-name">🪞 Copycat</div>
               <div class="engine-tag">Cross-market catch-up</div>
-              <p class="muted">Watches a closely related market. When that market moves and gold lags behind, Copycat trades gold catching up. Off by default.</p>
+              <p class="muted">Watches a closely related market. When that market moves and gold lags behind, Copycat trades gold catching up.</p>
             </div>
           </div>
           <p class="muted">Order comments name the engine that opened each position, e.g. <span class="mono">CatCare LUCKYCAT buy</span>, so you can always see which engine traded.</p>
@@ -143,11 +143,13 @@
           <h2>Exit model: cut losers, let winners run</h2>
           <p>Every engine manages its trades with the same building blocks, each with its own settings:</p>
           <ul class="feature-list">
-            <li><b>Protective stop from the start.</b> Every trade opens with a stop placed from the market's recent structure, with a safety fallback if that level isn't usable.</li>
+            <li><b>Protective stop from the start.</b> Every trade opens with a stop placed from the market's recent structure, with a safety fallback if that level isn't usable. Each engine can instead use a <b>fixed stop</b> a set number of points from entry.</li>
             <li><b>Take-profit per engine.</b> Each engine has its own target, set far enough out that winners have room to develop. You can set it to 0 to switch it off.</li>
             <li><b>Trailing stop.</b> Once a trade is far enough in profit, the stop starts following price. It only ever tightens, never loosens.</li>
             <li><b>Adaptive trailing (optional, per engine).</b> Instead of fixed distances, the trail scales with how volatile gold is when the trade opens: wider in fast markets, tighter in quiet ones. It is on by default for the engines where it works best.</li>
+            <li><b>Breakeven stop (optional, per engine).</b> Once a trade is far enough in profit, the stop moves to entry plus a small profit, so a winner can't turn into a loss. Combined with trailing, whichever stop is tighter wins.</li>
           </ul>
+          <p>Two shared guards keep the engines from working against each other: by default the EA <b>won't open a trade opposite</b> to one it already holds, and you can limit it to <b>one engine in a trade at a time</b>.</p>
         </section>
 
         <section class="doc-section" id="recovery">
@@ -167,8 +169,8 @@
 
         <section class="doc-section" id="lots">
           <h2>Lot sizing</h2>
-          <p>Every engine sizes its trades with one of two modes:</p>
-          <div class="grid-2">
+          <p>Every engine sizes its trades with one of three modes:</p>
+          <div class="grid-3">
             <div class="card">
               <h4>Fixed lot</h4>
               <p class="muted"><span class="mono">LOT_FIXED</span>: every entry uses the <code>Lots</code> value.</p>
@@ -177,6 +179,10 @@
               <h4>Balance-scaled</h4>
               <p class="muted"><span class="mono">LOT_BALANCE_PER_001</span>: 0.01 lot for every <code>DollarsPer001Lot</code> of account balance, so exposure grows with the account.</p>
             </div>
+            <div class="card">
+              <h4>Risk percent</h4>
+              <p class="muted"><span class="mono">LOT_RISK_PERCENT</span>: the lot that loses <code>RiskPercent</code>% of balance if the trade's stop loss is hit. It never goes below your broker's minimum lot, so with a small balance or a wide stop the real risk can be higher than the %.</p>
+            </div>
           </div>
         </section>
 
@@ -184,7 +190,7 @@
           <h2>Requirements</h2>
           <ul class="feature-list">
             <li><b>Symbol: XAUUSD (gold) only.</b> Every engine is built around gold.</li>
-            <li><b>Account type: Hedging.</b> Several engines can hold positions at once, and recovery can add a second position. A netting account would merge them and break the design.</li>
+            <li><b>Account type: Hedging (recommended).</b> Several engines can hold positions at once, and recovery can add a second position. On a netting account the EA still runs, but holds only one position at a time and recovery is switched off.</li>
             <li><b>MetaTrader 5.</b> This is an MT5 Expert Advisor.</li>
             <li><b>Broker time is detected automatically.</b> The session-based engines work out your broker's server time on their own, including daylight-saving changes. There's nothing to configure.</li>
             <li><b>Copycat</b> needs an additional market symbol from your broker. If it isn't available, Copycat switches itself off and says so in the Experts log.</li>
@@ -219,15 +225,18 @@
           <h2>Inputs reference</h2>
           <p class="muted">Inputs are grouped as shown in the EA's settings dialog.</p>
 
-          <h3>Runner engine</h3>
+          <h3>General settings</h3>
           <div class="table-wrap">
             <table>
               <thead><tr><th>Input</th><th>Default</th><th>Description</th></tr></thead>
               <tbody>
-                <tr><td><span class="param">LotMode</span></td><td><span class="def">LOT_FIXED</span></td><td>How each trade is sized: fixed lot, or balance-scaled.</td></tr>
+                <tr><td><span class="param">LotMode</span></td><td><span class="def">LOT_FIXED</span></td><td>How each trade is sized: fixed lot, balance-scaled, or risk percent.</td></tr>
                 <tr><td><span class="param">Lots</span></td><td><span class="def">0.01</span></td><td><span class="mono">LOT_FIXED</span>: the fixed lot size.</td></tr>
                 <tr><td><span class="param">DollarsPer001Lot</span></td><td><span class="def">1000.0</span></td><td><span class="mono">LOT_BALANCE_PER_001</span>: $ of balance per 0.01 lot.</td></tr>
+                <tr><td><span class="param">RiskPercent</span></td><td><span class="def">1.0</span></td><td><span class="mono">LOT_RISK_PERCENT</span>: % of balance lost if the stop loss is hit.</td></tr>
                 <tr><td><span class="param">MagicNumber</span></td><td><span class="def">710001</span></td><td>Base magic number. Each engine uses its own number derived from this, so positions never clash.</td></tr>
+                <tr><td><span class="param">AllowMultiple</span></td><td><span class="def">true</span></td><td>Allow several engines to hold positions at once. Off = a new entry waits until the EA is flat.</td></tr>
+                <tr><td><span class="param">BlockOpposite</span></td><td><span class="def">true</span></td><td>Don't open a trade opposite to a position the EA already holds.</td></tr>
               </tbody>
             </table>
           </div>
@@ -245,18 +254,21 @@
                 <tr><td><span class="param">Trailing start</span></td><td>Profit in points before the stop starts trailing.</td></tr>
                 <tr><td><span class="param">Trailing distance</span></td><td>Points the stop is kept behind price once trailing.</td></tr>
                 <tr><td><span class="param">Adaptive trailing</span></td><td>Scale the trail with market volatility instead of the two fixed values above.</td></tr>
-                <tr><td><span class="param">Stop loss</span></td><td>Pounce only: fixed protective stop in points.</td></tr>
+                <tr><td><span class="param">Breakeven stop</span></td><td>Move the stop to entry plus a small profit once the trade is far enough ahead (see the Breakeven group).</td></tr>
+                <tr><td><span class="param">Fixed stop loss</span></td><td>Protective stop in points from entry (0 = the engine's default stop). Pounce uses 1500 by default.</td></tr>
               </tbody>
             </table>
           </div>
 
-          <h3>Adaptive trailing, broker timezone, execution</h3>
+          <h3>Adaptive trailing, breakeven, broker timezone, execution</h3>
           <div class="table-wrap">
             <table>
               <thead><tr><th>Input</th><th>Default</th><th>Description</th></tr></thead>
               <tbody>
                 <tr><td><span class="param">Adaptive trailing start</span></td><td><span class="def">1.0</span></td><td>Multiplier for when adaptive trailing begins. Higher waits for more profit.</td></tr>
                 <tr><td><span class="param">Adaptive trailing distance</span></td><td><span class="def">0.75</span></td><td>Multiplier for how far behind price the adaptive trail sits. Higher gives more room.</td></tr>
+                <tr><td><span class="param">Breakeven trigger</span></td><td><span class="def">800</span></td><td>Points in profit before the breakeven stop moves.</td></tr>
+                <tr><td><span class="param">Breakeven added profit</span></td><td><span class="def">100</span></td><td>Points of profit locked in beyond entry when it moves.</td></tr>
                 <tr><td><span class="param">Broker time offset</span></td><td><span class="def">Auto-detect</span></td><td>Leave on Auto-detect. Manual is only for special Strategy Tester setups.</td></tr>
                 <tr><td><span class="param">Manual offset</span></td><td><span class="def">2.0</span></td><td>Manual mode only: broker server time minus UTC, in hours.</td></tr>
                 <tr><td><span class="param">SlippagePoints</span></td><td><span class="def">20</span></td><td>Maximum allowed slippage on order execution.</td></tr>
