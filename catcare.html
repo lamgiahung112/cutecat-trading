@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CatCare EA — Manual | CuteCat Trading</title>
-  <meta name="description" content="CatCare EA manual: a multi-strategy MetaTrader 5 Expert Advisor for XAUUSD. Seven independent engines, each with its own entry logic, sharing a stop model built to let winners run.">
+  <meta name="description" content="CatCare EA manual: a multi-strategy MetaTrader 5 Expert Advisor for XAUUSD. Eight independent engines, each with its own entry logic, sharing a stop model built to let winners run.">
   <link rel="icon" href="assets/img/catcare.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -41,8 +41,9 @@
       <h1>CatCare EA</h1>
       <p class="lead">
         A multi-strategy MetaTrader 5 EA that trades <b>XAUUSD only</b> and lets winners run to their
-        full potential. <b>Seven independent engines</b> each look for a different kind of opportunity
-        in gold, and they all share one exit model: cut losers quickly, then trail winners.
+        full potential. <b>Eight independent engines</b> each look for a different kind of opportunity
+        in gold. Every trade is protected by a stop loss from the moment it opens, and winners are
+        trailed so profits can keep growing.
       </p>
       <div class="hero-actions" style="justify-content:flex-start;">
         <a class="btn btn-primary" href="#install">Install guide</a>
@@ -61,6 +62,8 @@
         <a href="#engines">The engines</a>
         <a href="#exit">Exit model</a>
         <a href="#recovery">Recovery mode</a>
+        <a href="#news">News filter</a>
+        <a href="#dashboard">Dashboard</a>
         <a href="#lots">Lot sizing</a>
         <a href="#requirements">Requirements</a>
         <a href="#install">Installation</a>
@@ -74,16 +77,17 @@
         <section class="doc-section" id="overview">
           <h2>Overview</h2>
           <p>
-            <b>CatCare EA</b> trades gold (<b>XAUUSD</b>) with a team of <b>seven engines</b>. Each
+            <b>CatCare EA</b> trades gold (<b>XAUUSD</b>) with a team of <b>eight engines</b>. Each
             engine has its own entry logic and looks for a different kind of opportunity: order-flow
-            pressure, session behaviour, the weekly reopen, or gold's relationship with another market.
+            pressure, session behaviour, the weekly reopen, gold's relationship with another market,
+            or an intraday stretch away from the day's average price.
             Because the engines rarely trigger at the same moments, together they spread trades out
             instead of piling them into one setup.
           </p>
           <div class="callout info">
             <div class="ico">🎯</div>
             <div>
-              <h4>One chart, seven independent engines</h4>
+              <h4>One chart, eight independent engines</h4>
               <p>
                 All engines run side by side from a single XAUUSD chart. Each has its own magic number,
                 holds <b>one position at a time</b>, and can be switched on or off on its own. Turning an
@@ -135,13 +139,18 @@
               <div class="engine-tag">Cross-market catch-up</div>
               <p class="muted">Watches a closely related market. When that market moves and gold lags behind, Copycat trades gold catching up.</p>
             </div>
+            <div class="card engine-card">
+              <div class="engine-name">🔔 Doraemon</div>
+              <div class="engine-tag">Intraday snap-back · off by default</div>
+              <p class="muted">During the New York day, watches how far gold stretches from the day's volume-weighted average price. When a stretch is unusually large and order flow is no longer pushing it, Doraemon trades the snap back toward the average. Its trades are always closed before the New York session ends, so it never holds overnight or over the weekend. It is new, so it ships switched off: backtest it on your broker's real ticks before enabling it.</p>
+            </div>
           </div>
           <p class="muted">Order comments name the engine that opened each position, e.g. <span class="mono">CatCare LUCKYCAT buy</span>, so you can always see which engine traded.</p>
         </section>
 
         <section class="doc-section" id="exit">
-          <h2>Exit model: cut losers, let winners run</h2>
-          <p>Every engine manages its trades with the same building blocks, each with its own settings:</p>
+          <h2>Exit model: protect every trade, let winners run</h2>
+          <p>Most engines manage their trades with the same building blocks, each with its own settings:</p>
           <ul class="feature-list">
             <li><b>Protective stop from the start.</b> Every trade opens with a stop placed from the market's recent structure, with a safety fallback if that level isn't usable. Each engine can instead use a <b>fixed stop</b> a set number of points from entry.</li>
             <li><b>Take-profit per engine.</b> Each engine has its own target, set far enough out that winners have room to develop. You can set it to 0 to switch it off.</li>
@@ -149,13 +158,15 @@
             <li><b>Adaptive trailing (optional, per engine).</b> Instead of fixed distances, the trail scales with how volatile gold is when the trade opens: wider in fast markets, tighter in quiet ones. It is on by default for the engines where it works best.</li>
             <li><b>Breakeven stop (optional, per engine).</b> Once a trade is far enough in profit, the stop moves to entry plus a small profit, so a winner can't turn into a loss. Combined with trailing, whichever stop is tighter wins.</li>
           </ul>
+          <p><b>Copycat</b> uses a built-in trail with no trailing settings. <b>Doraemon</b> has its own fixed exit (stop, target and a time exit before the New York close); you only choose whether it uses the breakeven stop.</p>
           <p>Two shared guards keep the engines from working against each other: by default the EA <b>won't open a trade opposite</b> to one it already holds, and you can limit it to <b>one engine in a trade at a time</b>.</p>
         </section>
 
         <section class="doc-section" id="recovery">
           <h2>Recovery mode: optional and controlled</h2>
           <p>
-            Recovery is <b>off by default</b> and set per engine. When enabled, if an engine's position
+            Recovery is <b>off by default</b> and available on the three order-flow engines only
+            (<b>Orange Cat</b>, <b>Prowler</b> and <b>Stalker</b>). When enabled, if an engine's position
             runs a set distance <b>against</b> you, the EA adds <b>exactly one</b> same-direction
             position at <b>twice the lot</b>, sharing the original stop. It is a single, measured add,
             <b>not</b> an open-ended martingale grid.
@@ -165,6 +176,32 @@
             <li>With two positions open, the engine trails them as a <b>basket</b> from their blended break-even, moving both stops together.</li>
             <li>The shared stop is <b>clamped so it can never lock in a net loss</b>. In the worst case, the basket exits at break-even.</li>
           </ul>
+        </section>
+
+        <section class="doc-section" id="news">
+          <h2>News filter</h2>
+          <p>
+            Optional and <b>off by default</b>. When on, the EA opens no new trades from a set number of
+            minutes before to a set number of minutes after the US releases you pick: <b>CPI</b>,
+            <b>NFP</b>, <b>FOMC</b>, or every high-impact USD event. It can also close the EA's open
+            positions before the release.
+          </p>
+          <ul class="feature-list">
+            <li>The calendar comes from the ForexFactory weekly feed. Add <span class="mono">https://nfs.faireconomy.media</span> under <b>Tools → Options → Expert Advisors → Allow WebRequest</b>.</li>
+            <li><b>Live trading only.</b> MT5 doesn't allow web requests in the Strategy Tester, so the filter has no effect in backtests.</li>
+            <li>If the calendar can't be loaded, nothing is blocked and the EA trades normally.</li>
+          </ul>
+        </section>
+
+        <section class="doc-section" id="dashboard">
+          <h2>Dashboard</h2>
+          <p>
+            Optional and <b>off by default</b> (<code>ShowDashboard</code>). It adds a panel to the chart
+            with one row per engine: its floating P/L, today's result, closed P/L over the <b>last 90
+            days</b>, number of trades and win rate. The top three engines of the last 90 days are
+            highlighted, with a total row underneath.
+          </p>
+          <p class="muted">The panel is built to be light: it refreshes at most once a second, only re-reads trade history when something changes, and does nothing at all in non-visual backtests or optimisation.</p>
         </section>
 
         <section class="doc-section" id="lots">
@@ -184,13 +221,14 @@
               <p class="muted"><span class="mono">LOT_RISK_PERCENT</span>: the lot that loses <code>RiskPercent</code>% of balance if the trade's stop loss is hit. It never goes below your broker's minimum lot, so with a small balance or a wide stop the real risk can be higher than the %.</p>
             </div>
           </div>
+          <p>Before every trade the EA also checks that the account can carry it: there must be enough free margin, and the trade is skipped if hitting its own stop loss would leave the account at risk of a margin stop-out.</p>
         </section>
 
         <section class="doc-section" id="requirements">
           <h2>Requirements</h2>
           <ul class="feature-list">
             <li><b>Symbol: XAUUSD (gold) only.</b> Every engine is built around gold.</li>
-            <li><b>Account type: Hedging (recommended).</b> Several engines can hold positions at once, and recovery can add a second position. On a netting account the EA still runs, but holds only one position at a time and recovery is switched off.</li>
+            <li><b>Account type: Hedging (recommended).</b> Several engines can hold positions at once, and recovery can add a second position. On a netting account the EA still runs, but holds only one position at a time on the symbol and recovery is switched off.</li>
             <li><b>MetaTrader 5.</b> This is an MT5 Expert Advisor.</li>
             <li><b>Broker time is detected automatically.</b> The session-based engines work out your broker's server time on their own, including daylight-saving changes. There's nothing to configure.</li>
             <li><b>Copycat</b> needs an additional market symbol from your broker. If it isn't available, Copycat switches itself off and says so in the Experts log.</li>
@@ -241,15 +279,15 @@
             </table>
           </div>
 
-          <h3>Engine 1–7 (one group per engine)</h3>
-          <p class="muted">Every engine group has the same settings. Defaults are pre-tuned per engine.</p>
+          <h3>Engines 1–8 (one group per engine)</h3>
+          <p class="muted">Defaults are pre-tuned per engine. Not every engine has every setting: recovery is on engines 1–3 only, Copycat has no trailing settings, and Doraemon has only <b>Enable</b> and <b>Breakeven stop</b>.</p>
           <div class="table-wrap">
             <table>
               <thead><tr><th>Input</th><th>Description</th></tr></thead>
               <tbody>
                 <tr><td><span class="param">Enable</span></td><td>Let this engine open new trades. Open positions are always managed.</td></tr>
                 <tr><td><span class="param">Take profit</span></td><td>Target distance in points (0 = none).</td></tr>
-                <tr><td><span class="param">Recovery mode</span></td><td>Allow the one-shot double-lot recovery add for this engine.</td></tr>
+                <tr><td><span class="param">Recovery mode</span></td><td>Engines 1–3: allow the one-shot double-lot recovery add.</td></tr>
                 <tr><td><span class="param">Recovery trigger</span></td><td>Adverse distance in points before the recovery add fires.</td></tr>
                 <tr><td><span class="param">Trailing start</span></td><td>Profit in points before the stop starts trailing.</td></tr>
                 <tr><td><span class="param">Trailing distance</span></td><td>Points the stop is kept behind price once trailing.</td></tr>
@@ -260,7 +298,7 @@
             </table>
           </div>
 
-          <h3>Adaptive trailing, breakeven, broker timezone, execution</h3>
+          <h3>Adaptive trailing, breakeven, news filter, broker timezone, dashboard, execution</h3>
           <div class="table-wrap">
             <table>
               <thead><tr><th>Input</th><th>Default</th><th>Description</th></tr></thead>
@@ -269,8 +307,14 @@
                 <tr><td><span class="param">Adaptive trailing distance</span></td><td><span class="def">0.75</span></td><td>Multiplier for how far behind price the adaptive trail sits. Higher gives more room.</td></tr>
                 <tr><td><span class="param">Breakeven trigger</span></td><td><span class="def">800</span></td><td>Points in profit before the breakeven stop moves.</td></tr>
                 <tr><td><span class="param">Breakeven added profit</span></td><td><span class="def">100</span></td><td>Points of profit locked in beyond entry when it moves.</td></tr>
+                <tr><td><span class="param">Enable news filter</span></td><td><span class="def">false</span></td><td>No new trades around the selected news (live only).</td></tr>
+                <tr><td><span class="param">Close open positions before news</span></td><td><span class="def">false</span></td><td>Also close the EA's open positions when a news window starts.</td></tr>
+                <tr><td><span class="param">Minutes before / after news</span></td><td><span class="def">30 / 30</span></td><td>Size of the window around each release.</td></tr>
+                <tr><td><span class="param">Stop for CPI / NFP / FOMC</span></td><td><span class="def">true</span></td><td>Which releases open a news window.</td></tr>
+                <tr><td><span class="param">Stop for all high-impact USD news</span></td><td><span class="def">false</span></td><td>Use every high-impact USD event instead.</td></tr>
                 <tr><td><span class="param">Broker time offset</span></td><td><span class="def">Auto-detect</span></td><td>Leave on Auto-detect. Manual is only for special Strategy Tester setups.</td></tr>
                 <tr><td><span class="param">Manual offset</span></td><td><span class="def">2.0</span></td><td>Manual mode only: broker server time minus UTC, in hours.</td></tr>
+                <tr><td><span class="param">Show dashboard on the chart</span></td><td><span class="def">false</span></td><td>Show the per-engine results panel.</td></tr>
                 <tr><td><span class="param">SlippagePoints</span></td><td><span class="def">20</span></td><td>Maximum allowed slippage on order execution.</td></tr>
               </tbody>
             </table>
