@@ -60,6 +60,7 @@
         <div class="toc-title">On this page</div>
         <a href="#overview">Overview</a>
         <a href="#engines">The engines</a>
+        <a href="#backtest">Backtest</a>
         <a href="#exit">Exit model</a>
         <a href="#recovery">Recovery mode</a>
         <a href="#news">News filter</a>
@@ -146,6 +147,61 @@
             </div>
           </div>
           <p class="muted">Order comments name the engine that opened each position, e.g. <span class="mono">CatCare LUCKYCAT buy</span>, so you can always see which engine traded.</p>
+        </section>
+
+        <section class="doc-section" id="backtest">
+          <h2>Backtest</h2>
+          <p>All eight engines together on XAUUSD in 2026, then each engine on its own and how closely their results move together. Click any image to open it full size.</p>
+          <figure>
+            <a href="assets/img/catcare/catcare_backtest_2026.png" target="_blank" rel="noopener"><img src="assets/img/catcare/catcare_backtest_2026.png" alt="CatCare EA 2026 XAUUSD backtest, all engines"></a>
+            <figcaption>2026 XAUUSD backtest, all engines, starting balance 5,000 USD.</figcaption>
+          </figure>
+          <h3>Engine by engine</h3>
+          <div class="grid-2">
+            <figure style="margin:0;">
+              <a href="assets/img/catcare/1_orange_cat.png" target="_blank" rel="noopener"><img src="assets/img/catcare/1_orange_cat.png" alt="CatCare EA Orange Cat engine 2026 backtest" loading="lazy"></a>
+              <figcaption>🐈 Orange Cat</figcaption>
+            </figure>
+            <figure style="margin:0;">
+              <a href="assets/img/catcare/2_prowler.png" target="_blank" rel="noopener"><img src="assets/img/catcare/2_prowler.png" alt="CatCare EA Prowler engine 2026 backtest" loading="lazy"></a>
+              <figcaption>🐆 Prowler</figcaption>
+            </figure>
+            <figure style="margin:0;">
+              <a href="assets/img/catcare/3_stalker.png" target="_blank" rel="noopener"><img src="assets/img/catcare/3_stalker.png" alt="CatCare EA Stalker engine 2026 backtest" loading="lazy"></a>
+              <figcaption>🐾 Stalker</figcaption>
+            </figure>
+            <figure style="margin:0;">
+              <a href="assets/img/catcare/4_lucky_cat.png" target="_blank" rel="noopener"><img src="assets/img/catcare/4_lucky_cat.png" alt="CatCare EA Lucky Cat engine 2026 backtest" loading="lazy"></a>
+              <figcaption>🧧 Lucky Cat</figcaption>
+            </figure>
+            <figure style="margin:0;">
+              <a href="assets/img/catcare/5_night_cat.png" target="_blank" rel="noopener"><img src="assets/img/catcare/5_night_cat.png" alt="CatCare EA Night Cat engine 2026 backtest" loading="lazy"></a>
+              <figcaption>🌙 Night Cat</figcaption>
+            </figure>
+            <figure style="margin:0;">
+              <a href="assets/img/catcare/6_pounce.png" target="_blank" rel="noopener"><img src="assets/img/catcare/6_pounce.png" alt="CatCare EA Pounce engine 2026 backtest" loading="lazy"></a>
+              <figcaption>🐯 Pounce</figcaption>
+            </figure>
+            <figure style="margin:0;">
+              <a href="assets/img/catcare/7_copycat.png" target="_blank" rel="noopener"><img src="assets/img/catcare/7_copycat.png" alt="CatCare EA Copycat engine 2026 backtest" loading="lazy"></a>
+              <figcaption>🪞 Copycat</figcaption>
+            </figure>
+            <figure style="margin:0;">
+              <a href="assets/img/catcare/8_doraemon.png" target="_blank" rel="noopener"><img src="assets/img/catcare/8_doraemon.png" alt="CatCare EA Doraemon engine 2026 backtest" loading="lazy"></a>
+              <figcaption>🔔 Doraemon</figcaption>
+            </figure>
+          </div>
+          <h3>How the engines relate</h3>
+          <figure>
+            <a href="assets/img/catcare/correlation.png" target="_blank" rel="noopener"><img src="assets/img/catcare/correlation.png" alt="Correlation of daily results between CatCare EA engines" loading="lazy"></a>
+            <figcaption>Low correlation means the engines tend to win and lose on different days.</figcaption>
+          </figure>
+          <div class="callout warn">
+            <div class="ico">📉</div>
+            <div>
+              <p>Backtests run on historical data under ideal fill assumptions. They are <b>illustrative only</b> and do not guarantee future performance.</p>
+            </div>
+          </div>
         </section>
 
         <section class="doc-section" id="exit">
